@@ -282,16 +282,16 @@ class OTPGeneratorException(Exception):
 class OTPGenerator:
     """OTPGenerator class"""
 
-    def __init__(self, password, salt, hash_algo=OTP_ALGO_MD5):
+    def __init__(self, password, seed, hash_algo=OTP_ALGO_MD5):
         """
-        Constructs an OTPGenerator object with a given password and salt
+        Constructs an OTPGenerator object with a given password and seed
 
         Keyword Arguments:
         :param password: the password string
         :type password: bytes
 
-        :param salt: the salt received from the server-challenge
-        :type salt: str
+        :param seed: the seed received from the server-challenge
+        :type seed: str
 
         :param hash_algo: the hash algo.
         :type hash_algo: int or str
@@ -304,16 +304,16 @@ class OTPGenerator:
             raise OTPGeneratorException(
                 'Password must be longer than 10 bytes')
         self._password = password
-        if not isinstance(salt, str):
-            raise OTPGeneratorException('Salt must be a string')
-        if not salt or len(salt) > 16:
+        if not isinstance(seed, str):
+            raise OTPGeneratorException('Seed must be a string')
+        if not seed or len(seed) > 16:
             raise OTPGeneratorException(
                 'The seed MUST be of 1 to 16 characters in length')
-        for char in salt:
+        for char in seed:
             if char not in string.ascii_letters + string.digits:
                 raise OTPGeneratorException(
                     'The seed MUST consist of purely alphanumeric characters')
-        self._salt = salt
+        self._seed = seed
         if isinstance(hash_algo, int):
             self._hash_algo = _ALGO_DICT.get(hash_algo, 'md5')
         elif isinstance(hash_algo, str):
@@ -521,7 +521,7 @@ class OTPGenerator:
             hash_obj = hashlib.new(self._hash_algo)
             if not digest:
                 # 0 step
-                hash_obj.update(self._salt.lower().encode() + self._password)
+                hash_obj.update(self._seed.lower().encode() + self._password)
             else:
                 hash_obj.update(digest)
             large_digest = hash_obj.digest()
