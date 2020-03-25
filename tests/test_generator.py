@@ -1,0 +1,115 @@
+# -*- coding: utf-8 -*-
+"""Tests for otp2289.OTPGenerator"""
+
+import otp2289
+
+
+def test_md5():
+    """
+    Tests the MD5 functionality of the OTPGenerator as described in the RFC
+
+    Those are the tests from 'RFC-2289 Appendix C - OTP Verification Examples'
+    """
+    # We could run this in a loop, but I guess "Readability counts."
+
+    # pass='This is a test.', seed='TeSt'
+    gen = otp2289.OTPGenerator('This is a test.'.encode(),
+                               'TeSt',
+                               otp2289.OTP_ALGO_MD5)
+    res_words = gen.generate_otp_words(0)
+    res_hex = gen.generate_otp_hexdigest(0)
+    assert isinstance(res_words, str)
+    assert isinstance(res_hex, str)
+    assert res_hex == '0x9e876134d90499dd'
+    assert res_words == 'INCH SEA ANNE LONG AHEM TOUR'
+    # step 1
+    assert gen.generate_otp_hexdigest(1) == '0x7965e05436f5029f'
+    assert gen.generate_otp_words(1) == 'EASE OIL FUM CURE AWRY AVIS'
+    # step 99
+    assert gen.generate_otp_hexdigest(99) == '0x50fe1962c4965880'
+    assert gen.generate_otp_words(99) == 'BAIL TUFT BITS GANG CHEF THY'
+    # iterator test
+    hexdigests = list(gen.hexdigest_range(105))  # testing the range itself
+    words = list(gen.words_range(99))
+    hexdigests.reverse()
+    words.reverse()
+    assert hexdigests[0] == '0x9e876134d90499dd'
+    assert hexdigests[1] == '0x7965e05436f5029f'
+    assert hexdigests[99] == '0x50fe1962c4965880'
+    assert words[0] == 'INCH SEA ANNE LONG AHEM TOUR'
+    assert words[1] == 'EASE OIL FUM CURE AWRY AVIS'
+    assert words[99] == 'BAIL TUFT BITS GANG CHEF THY'
+    # pass='AbCdEfGhIjK', seed='alpha1'
+    gen = otp2289.OTPGenerator('AbCdEfGhIjK'.encode(),
+                               'alpha1',
+                               otp2289.OTP_ALGO_MD5)
+    assert gen.generate_otp_hexdigest(0) == '0x87066dd9644bf206'
+    assert gen.generate_otp_words(0) == 'FULL PEW DOWN ONCE MORT ARC'
+    assert gen.generate_otp_hexdigest(1) == '0x7cd34c1040add14b'
+    assert gen.generate_otp_words(1) == 'FACT HOOF AT FIST SITE KENT'
+    assert gen.generate_otp_hexdigest(99) == '0x5aa37a81f212146c'
+    assert gen.generate_otp_words(99) == 'BODE HOP JAKE STOW JUT RAP'
+    # pass="OTP's are good", seed='correct'
+    gen = otp2289.OTPGenerator("OTP's are good".encode(),
+                               'correct',
+                               otp2289.OTP_ALGO_MD5)
+    assert gen.generate_otp_hexdigest(0) == '0xf205753943de4cf9'
+    assert gen.generate_otp_words(0) == 'ULAN NEW ARMY FUSE SUIT EYED'
+    assert gen.generate_otp_hexdigest(1) == '0xddcdac956f234937'
+    assert gen.generate_otp_words(1) == 'SKIM CULT LOB SLAM POE HOWL'
+    assert gen.generate_otp_hexdigest(99) == '0xb203e28fa525be47'
+    assert gen.generate_otp_words(99) == 'LONG IVY JULY AJAR BOND LEE'
+
+
+def test_sha1():
+    """
+    Tests the SHA-1 functionality of the OTPGenerator as described in the RFC
+
+    Those are the tests from 'RFC-2289 Appendix C - OTP Verification Examples'
+    """
+    # pass='This is a test.', seed='TeSt'
+    gen = otp2289.OTPGenerator('This is a test.'.encode(),
+                               'TeSt',
+                               otp2289.OTP_ALGO_SHA1)
+    # step=0
+    res_hex = gen.generate_otp_hexdigest(0)
+    res_words = gen.generate_otp_words(0)
+    assert isinstance(res_words, str)
+    assert isinstance(res_hex, str)
+    assert res_hex == '0xbb9e6ae1979d8ff4'
+    assert res_words == 'MILT VARY MAST OK SEES WENT'
+    assert gen.generate_otp_hexdigest(1) == '0x63d936639734385b'
+    assert gen.generate_otp_words(1) == 'CART OTTO HIVE ODE VAT NUT'
+    assert gen.generate_otp_hexdigest(99) == '0x87fec7768b73ccf9'
+    assert gen.generate_otp_words(99) == 'GAFF WAIT SKID GIG SKY EYED'
+    # iterator test
+    hexdigests = list(gen.hexdigest_range(105))
+    words = list(gen.words_range(99))
+    hexdigests.reverse()
+    words.reverse()
+    assert hexdigests[0] == '0xbb9e6ae1979d8ff4'
+    assert hexdigests[1] == '0x63d936639734385b'
+    assert hexdigests[99] == '0x87fec7768b73ccf9'
+    assert words[0] == 'MILT VARY MAST OK SEES WENT'
+    assert words[1] == 'CART OTTO HIVE ODE VAT NUT'
+    assert words[99] == 'GAFF WAIT SKID GIG SKY EYED'
+    # pass='AbCdEfGhIjK', seed='alpha1'
+    gen = otp2289.OTPGenerator('AbCdEfGhIjK'.encode(),
+                               'alpha1',
+                               otp2289.OTP_ALGO_SHA1)
+    assert gen.generate_otp_hexdigest(0) == '0xad85f658ebe383c9'
+    assert gen.generate_otp_words(0) == 'LEST OR HEEL SCOT ROB SUIT'
+    assert gen.generate_otp_hexdigest(1) == '0xd07ce229b5cf119b'
+    assert gen.generate_otp_words(1) == 'RITE TAKE GELD COST TUNE RECK'
+    assert gen.generate_otp_hexdigest(99) == '0x27bc71035aaf3dc6'
+    assert gen.generate_otp_words(99) == 'MAY STAR TIN LYON VEDA STAN'
+    # pass="OTP's are good", seed='correct'
+    gen = otp2289.OTPGenerator("OTP's are good".encode(),
+                               'correct',
+                               otp2289.OTP_ALGO_SHA1)
+    assert gen.generate_otp_hexdigest(0) == '0xd51f3e99bf8e6f0b'
+    assert gen.generate_otp_words(0) == 'RUST WELT KICK FELL TAIL FRAU'
+    assert gen.generate_otp_hexdigest(1) == '0x82aeb52d943774e4'
+    assert gen.generate_otp_words(1) == 'FLIT DOSE ALSO MEW DRUM DEFY'
+    assert gen.generate_otp_hexdigest(99) == '0x4f296a74fe1567ec'
+    assert gen.generate_otp_words(99) == 'AURA ALOE HURL WING BERG WAIT'
