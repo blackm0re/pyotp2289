@@ -1,7 +1,54 @@
 # -*- coding: utf-8 -*-
 """Tests for otp2289.OTPGenerator"""
+import pytest
 
 import otp2289
+
+
+def test_exceptions_and_constraints():
+    """Tests general exceptions and constraints"""
+    # test the otp2289.OTPGenerator __init__
+    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+        otp2289.OTPGenerator('1234567', 'TeStø'.encode(), otp2289.OTP_ALGO_MD5)
+    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.value.args[0] == 'Password must be a byte-string'
+    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+        otp2289.OTPGenerator('1234567'.encode(),
+                             'TeStø'.encode(),
+                             otp2289.OTP_ALGO_MD5)
+    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.value.args[0] == 'Password must be longer than 10 bytes'
+    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+        otp2289.OTPGenerator('This is a test.'.encode(),
+                             'TeStø'.encode(),
+                             otp2289.OTP_ALGO_MD5)
+    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.value.args[0] == 'Seed must be a string'
+    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+        otp2289.OTPGenerator('This is a test.'.encode(),
+                             'TeStøtEsTteSTteStTest',
+                             otp2289.OTP_ALGO_SHA1)
+    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.value.args[0] == ('The seed MUST be of 1 to 16 '
+                                      'characters in length')
+    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+        otp2289.OTPGenerator('This is a test.'.encode(),
+                             'TeStø',
+                             otp2289.OTP_ALGO_SHA1)
+    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.value.args[0] == ('The seed MUST consist of purely '
+                                      'alphanumeric characters')
+    gen = otp2289.OTPGenerator('This is a test.'.encode(),
+                               'TeSt',
+                               otp2289.OTP_ALGO_MD5)
+    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+        gen.generate_otp_words('3')
+    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.value.args[0] == 'Step value MUST be an int'
+    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+        gen.generate_otp_hexdigest(-1)
+    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.value.args[0] == 'Step value MUST be >= 0'
 
 
 def test_md5():
@@ -11,7 +58,6 @@ def test_md5():
     Those are the tests from 'RFC-2289 Appendix C - OTP Verification Examples'
     """
     # We could run this in a loop, but I guess "Readability counts."
-
     # pass='This is a test.', seed='TeSt'
     gen = otp2289.OTPGenerator('This is a test.'.encode(),
                                'TeSt',
