@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 A pure Python implementation of the RFC-2289 OTP generator
 """
@@ -279,23 +278,28 @@ class OTPGeneratorException(Exception):
     """OTPGeneratorException class"""
 
 
+class OTPChallengeException(Exception):
+    """OTPChallengeException class"""
+
+
 class OTPGenerator:
     """OTPGenerator class"""
 
-    def __init__(self, password, seed, hash_algo=OTP_ALGO_MD5):
+    def __init__(self, password, seed='', hash_algo=OTP_ALGO_MD5):
         """
-        Constructs an OTPGenerator object with a given password and seed
+        Constructs an OTPGenerator object with a given password and seed.
 
         Keyword Arguments:
-        :param password: the password string
+        :param password: The password string
         :type password: bytes
 
-        :param seed: the seed received from the server-challenge
+        :param seed: The seed received from the challenge, defaults to ''
         :type seed: str
 
-        :param hash_algo: the hash algo.
+        :param hash_algo: The hash algo, defaults to OTP_ALGO_MD5
         :type hash_algo: int or str
-        (default OTP_ALGO_MD5)
+
+        :raises OTPGeneratorException: In case input does not validate
         """
         # enforce the rfc2289 constraints
         if not isinstance(password, bytes):
@@ -304,37 +308,20 @@ class OTPGenerator:
             raise OTPGeneratorException(
                 'Password must be longer than 10 bytes')
         self._password = password
-        if not isinstance(seed, str):
-            raise OTPGeneratorException('Seed must be a string')
-        if not seed or len(seed) > 16:
-            raise OTPGeneratorException(
-                'The seed MUST be of 1 to 16 characters in length')
-        for char in seed:
-            if char not in string.ascii_letters + string.digits:
-                raise OTPGeneratorException(
-                    'The seed MUST consist of purely alphanumeric characters')
         self._seed = seed
-        if isinstance(hash_algo, int):
-            self._hash_algo = _ALGO_DICT.get(hash_algo, 'md5')
-        elif isinstance(hash_algo, str):
-            self._hash_algo = hash_algo
-        else:
-            raise OTPGeneratorException(
-                'hash_algo must be an int or a str')
-        if self._hash_algo not in hashlib.algorithms_available:
-            raise OTPGeneratorException(
-                '{hash_algo} is not supported by this version of the '
-                'hashlib module'.format(hash_algo=self._hash_algo))
+        if self._seed:  # the seed was set here. Validate it
+            self._seed = self.validate_seed(self._seed)
+        self._hash_algo = self.validate_hash_algo(hash_algo)
 
     @staticmethod
     def bit_pair_sum(bit_stream):
         """
-        Split bit_stream in bit-pairs and sum them all together
+        Split bit_stream in bit-pairs and sum them all together.
 
         :param bit_stream: The bit-stream object
         :type bit_stream: str
 
-        :return: the sum of all bit-pairs in bit_stream
+        :return: The sum of all bit-pairs in bit_stream
         :rtype: int
         """
         if not isinstance(bit_stream, str):
@@ -347,15 +334,41 @@ class OTPGenerator:
         return value
 
     @staticmethod
+    def get_tokens_from_challenge(challenge):
+        """
+        Returns tokens (seed, hash_algo and step) from a challenge string.
+
+        N.B. The tokens are not validated here.
+
+        :param challenge: The challenge string described in RFC-2289
+        :type challenge: str
+
+        :raises OTPChallengeException: When the challenge string is invalid
+
+        :return: (seed, hash_algo, step) tuple.
+        :rtype: tuple
+        """
+        if not isinstance(challenge, str):
+            raise OTPChallengeException('Challenge must be str')
+        challenge = challenge.strip()
+        if not challenge.startswith('otp-'):
+            raise OTPChallengeException('Invalid challenge')
+        try:
+            hash_algo, step, seed = challenge[4:].split()
+            return (seed, hash_algo, int(step))
+        except ValueError:
+            raise OTPChallengeException('Invalid challenge')
+
+    @staticmethod
     def sha1_digest_folding(sha1_digest):
         """
         Implementation of the 160bit -> 64bit folding algorithm
-        for sha1 digest
+        for sha1 digest.
 
         :param sha1_digest: The SHA1 digest
         :type sha1_digest: bytes
 
-        :return: the byte-string representing the folded sha1-digest
+        :return: The byte-string representing the folded sha1-digest
         :rtype: bytes
         """
         if not (isinstance(sha1_digest, bytes)):
@@ -396,7 +409,7 @@ class OTPGenerator:
     @staticmethod
     def strxor(byte_str1, byte_str2):
         """
-        Implementation of strxor similar to the one provided by pycrypto
+        Implementation of strxor similar to the one provided by pycrypto.
 
         :param byte_str1: Byte-string 1
         :type byte_str1: bytes
@@ -404,7 +417,7 @@ class OTPGenerator:
         :param byte_str2: Byte-string 2
         :type byte_str2: bytes
 
-        :return: the byte-string representing the result of byte_str1^byte_str2
+        :return: The byte-string representing the result of byte_str1^byte_str2
         :rtype: bytes
         """
         if not (isinstance(byte_str1, bytes) and isinstance(byte_str2, bytes)):
@@ -418,28 +431,101 @@ class OTPGenerator:
             [byte_str1[i] ^ byte_str2[i] for i in range(length)]
         )
 
+    @staticmethod
+    def validate_hash_algo(hash_algo):
+        """
+        Validates the provided hash-algorithm.
+
+        :param hash_algo: The hash algo, defaults to OTP_ALGO_MD5
+        :type hash_algo: int or str
+
+        :raises OTPGeneratorException: In case hash_algo does not validate
+
+        :return: The validated hash_algo in str-form
+        :rtype: str
+        """
+        if isinstance(hash_algo, int):
+            if hash_algo not in _ALGO_DICT:
+                raise OTPGeneratorException(
+                    'hash_algo is not among the known algorithms')
+            hash_algo = _ALGO_DICT.get(hash_algo)
+        if not isinstance(hash_algo, str):
+            raise OTPGeneratorException(
+                'hash_algo must be an int or a str')
+        if hash_algo not in hashlib.algorithms_available:
+            raise OTPGeneratorException(
+                f'{hash_algo} is not supported by this version of the '
+                'hashlib module')
+        return hash_algo
+
+    @staticmethod
+    def validate_seed(seed):
+        """
+        Validates the provided seed as defined by RFC-2289.
+
+        :param seed: The seed received from the challenge, defaults to ''
+        :type seed: str
+
+        :raises OTPGeneratorException: In case seed does not validate
+
+        :return: The validated (and very same) seed
+        :rtype: str
+        """
+        if not isinstance(seed, str):
+            raise OTPGeneratorException('Seed must be a string')
+        if not seed or len(seed) > 16:
+            raise OTPGeneratorException(
+                'The seed MUST be of 1 to 16 characters in length')
+        for char in seed:
+            if char not in string.ascii_letters + string.digits:
+                raise OTPGeneratorException(
+                    'The seed MUST consist of purely alphanumeric characters')
+        return seed
+
     def generate_otp_hexdigest(self, step):
         """
-        Generates the OTP hexdigest for the given step
+        Generates the OTP hexdigest for the given step.
 
         Keyword Arguments:
-        :param step: the step to generate OTP for
+        :param step: The step to generate OTP for
         :type step: int
 
-        :return: hexdigest for the given step
+        :return: Hexdigest for the given step
         :rtype: str
         """
         return '0x' + binascii.hexlify(self._generate_otp_bytes(step)).decode()
 
-    def generate_otp_words(self, step):
+    def generate_otp_hexdigest_from_challenge(self, challenge):
         """
-        Generates the OTP six words token for the given step
+        Same as generate_otp_hexdigest, but it generates hex. from a challenge.
+
+        RFC-2289 states:
+        The challenge MUST be in a standard syntax so
+        that automated generators can recognize the challenge in context and
+        extract these parameters. The syntax of the challenge is:
+        otp-<algorithm identifier> <sequence integer> <seed>
 
         Keyword Arguments:
-        :param step: the step to generate OTP for
+        :param challenge: The challenge string
+        :type challenge: str
+
+        :return: Hexdigest for the given challenge
+        :rtype: str
+        """
+        seed, hash_algo, step = self.get_tokens_from_challenge(challenge)
+        self._seed = self.validate_seed(seed)
+        self._hash_algo = self.validate_hash_algo(hash_algo)
+        return self.generate_otp_hexdigest(step)
+
+    def generate_otp_words(self, step):
+        """
+        Generates the OTP six words token for the given step.
+
+        Keyword Arguments:
+        :param step: The step to generate OTP for
         :type step: int
 
-        :return: six words (separated by single space) token for the given step
+        :return: Six words (separated by single space) token for the given step
         :rtype: str
         """
         digest = self._generate_otp_bytes(step)
@@ -456,6 +542,28 @@ class OTPGenerator:
             RFC1760_TOKENS[int(
                 bit_stream[55:64] + '{0:0>8b}'.format(bit_pair_sum)[-2:], 2)])
         return ' '.join(tokens)
+
+    def generate_otp_words_from_challenge(self, challenge):
+        """
+        Same as generate_otp_words, but it generates words from a challenge.
+
+        RFC-2289 states:
+        The challenge MUST be in a standard syntax so
+        that automated generators can recognize the challenge in context and
+        extract these parameters. The syntax of the challenge is:
+        otp-<algorithm identifier> <sequence integer> <seed>
+
+        Keyword Arguments:
+        :param challenge: The challenge string
+        :type challenge: str
+
+        :return: Six words token for the given challenge
+        :rtype: str
+        """
+        seed, hash_algo, step = self.get_tokens_from_challenge(challenge)
+        self._seed = self.validate_seed(seed)
+        self._hash_algo = self.validate_hash_algo(hash_algo)
+        return self.generate_otp_words(step)
 
     def hexdigest_range(self, start=499, stop=0):
         """
@@ -503,13 +611,13 @@ class OTPGenerator:
 
     def _generate_otp_bytes(self, step):
         """
-        Generates the OTP bytes for the given step
+        Generates the OTP bytes for the given step.
 
         Keyword Arguments:
-        :param step: the step to generate OTP for
+        :param step: The step to generate OTP for
         :type step: int
 
-        :return: the digest bytes for the given step
+        :return: The digest bytes for the given step
         :rtype: bytes
         """
         if not isinstance(step, int):

@@ -5,9 +5,38 @@ import pytest
 import otp2289
 
 
-def test_exceptions_and_constraints():
-    """Tests general exceptions and constraints"""
-    # test the otp2289.OTPGenerator __init__
+def test_caller_exceptions():
+    """Tests the exceptions when calling an initialized object"""
+    gen = otp2289.OTPGenerator('This is a test.'.encode(),
+                               'TeSt',
+                               otp2289.OTP_ALGO_MD5)
+    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+        gen.generate_otp_words('3')
+    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.value.args[0] == 'Step value MUST be an int'
+    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+        gen.generate_otp_hexdigest(-1)
+    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.value.args[0] == 'Step value MUST be >= 0'
+    with pytest.raises(otp2289.OTPChallengeException) as exc_info:
+        gen.generate_otp_hexdigest_from_challenge(b'md5 fbd TeSt')
+    assert exc_info.type is otp2289.OTPChallengeException
+    assert exc_info.value.args[0] == 'Challenge must be str'
+    with pytest.raises(otp2289.OTPChallengeException) as exc_info:
+        gen.generate_otp_hexdigest_from_challenge('md5 fbd TeSt')
+    assert exc_info.type is otp2289.OTPChallengeException
+    assert exc_info.value.args[0] == 'Invalid challenge'
+    with pytest.raises(otp2289.generator.OTPChallengeException) as exc_info:
+        gen.generate_otp_hexdigest_from_challenge('otp-md5 fbd TeSt')
+    assert exc_info.type is otp2289.generator.OTPChallengeException
+    assert exc_info.value.args[0] == 'Invalid challenge'
+
+
+def test_constructor_exceptions():
+    """
+    Tests the exceptions when initializing a new object (in the constructor)
+    """
+    # test the otp2289.OTPGenerator __init__ and validators
     with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
         otp2289.OTPGenerator('1234567', 'TeStø'.encode(), otp2289.OTP_ALGO_MD5)
     assert exc_info.type is otp2289.OTPGeneratorException
@@ -38,17 +67,23 @@ def test_exceptions_and_constraints():
     assert exc_info.type is otp2289.OTPGeneratorException
     assert exc_info.value.args[0] == ('The seed MUST consist of purely '
                                       'alphanumeric characters')
-    gen = otp2289.OTPGenerator('This is a test.'.encode(),
-                               'TeSt',
-                               otp2289.OTP_ALGO_MD5)
     with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
-        gen.generate_otp_words('3')
+        otp2289.OTPGenerator('This is a test.'.encode(), 'TeSt', 9)
     assert exc_info.type is otp2289.OTPGeneratorException
-    assert exc_info.value.args[0] == 'Step value MUST be an int'
+    assert exc_info.value.args[0] == (
+        'hash_algo is not among the known algorithms')
     with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
-        gen.generate_otp_hexdigest(-1)
+        otp2289.OTPGenerator('This is a test.'.encode(), 'TeSt', b'md5')
     assert exc_info.type is otp2289.OTPGeneratorException
-    assert exc_info.value.args[0] == 'Step value MUST be >= 0'
+    assert exc_info.value.args[0] == 'hash_algo must be an int or a str'
+    # test the package structure as well
+    with pytest.raises(otp2289.generator.OTPGeneratorException) as exc_info:
+        otp2289.generator.OTPGenerator('This is a test.'.encode(),
+                                       'TeSt',
+                                       'foo')
+    assert exc_info.type is otp2289.generator.OTPGeneratorException
+    assert exc_info.value.args[0] == ('foo is not supported by this version '
+                                      'of the hashlib module')
 
 
 def test_md5():
@@ -71,9 +106,17 @@ def test_md5():
     # step 1
     assert gen.generate_otp_hexdigest(1) == '0x7965e05436f5029f'
     assert gen.generate_otp_words(1) == 'EASE OIL FUM CURE AWRY AVIS'
+    assert gen.generate_otp_hexdigest_from_challenge('otp-md5 1   TeSt') == (
+        '0x7965e05436f5029f')
+    assert gen.generate_otp_words_from_challenge('otp-md5 1 TeSt') == (
+        'EASE OIL FUM CURE AWRY AVIS')
     # step 99
     assert gen.generate_otp_hexdigest(99) == '0x50fe1962c4965880'
     assert gen.generate_otp_words(99) == 'BAIL TUFT BITS GANG CHEF THY'
+    assert gen.generate_otp_hexdigest_from_challenge('otp-md5 99   TeSt') == (
+        '0x50fe1962c4965880')
+    assert gen.generate_otp_words_from_challenge('otp-md5 99   TeSt') == (
+        'BAIL TUFT BITS GANG CHEF THY')
     # iterator test
     hexdigests = list(gen.hexdigest_range(105))  # testing the range itself
     words = list(gen.words_range(99))
@@ -126,8 +169,16 @@ def test_sha1():
     assert res_words == 'MILT VARY MAST OK SEES WENT'
     assert gen.generate_otp_hexdigest(1) == '0x63d936639734385b'
     assert gen.generate_otp_words(1) == 'CART OTTO HIVE ODE VAT NUT'
+    assert gen.generate_otp_hexdigest_from_challenge('otp-sha1 1 TeSt') == (
+        '0x63d936639734385b')
+    assert gen.generate_otp_words_from_challenge('otp-sha1 1 TeSt') == (
+        'CART OTTO HIVE ODE VAT NUT')
     assert gen.generate_otp_hexdigest(99) == '0x87fec7768b73ccf9'
     assert gen.generate_otp_words(99) == 'GAFF WAIT SKID GIG SKY EYED'
+    assert gen.generate_otp_hexdigest_from_challenge('otp-sha1 99   TeSt') == (
+        '0x87fec7768b73ccf9')
+    assert gen.generate_otp_words_from_challenge('otp-sha1 99  TeSt') == (
+        'GAFF WAIT SKID GIG SKY EYED')
     # iterator test
     hexdigests = list(gen.hexdigest_range(105))
     words = list(gen.words_range(99))

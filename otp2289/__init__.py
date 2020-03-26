@@ -3,6 +3,7 @@
 
 from .generator import (OTP_ALGO_MD5,
                         OTP_ALGO_SHA1,
+                        OTPChallengeException,
                         OTPGenerator,
                         OTPGeneratorException)
 
@@ -24,5 +25,6 @@ VERSION = tuple(map(int_or_str, __version__.split('.')))
 
 __all__ = ['OTP_ALGO_MD5',
            'OTP_ALGO_SHA1',
+           'OTPChallengeException',
            'OTPGenerator',
            'OTPGeneratorException']
