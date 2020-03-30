@@ -57,10 +57,32 @@ one-time password it received, and must store the corresponding one-
 time password sequence number. The server must also facilitate the
 changing of the user's secret pass-phrase in a secure manner."
 
+"The OTP system generator passes the user's secret pass-phrase, along
+with a seed received from the server as part of the challenge,
+through multiple iterations of a secure hash function to produce a
+one-time password. After each successful authentication, the number
+of secure hash function iterations is reduced by one.  Thus, a unique
+sequence of passwords is generated.  The server verifies the one-time
+password received from the generator by computing the secure hash
+function once and comparing the result with the previously accepted
+one-time password."
+
 
 ## Examples
 
-TODO
+   ```python
+   import getpass
+
+   import otp2289
+
+   # create a generator object
+   passwd_bytes = getpass.getpass().encode()  # Type: This is a test.
+   generator = otp2289.generator.OTPGenerator(passwd_bytes,
+                                              'TesT',
+                                              otp2289.OTP_ALGO_MD5)
+   generator.generate_otp_hexdigest(0)
+   generator.gen.generate_otp_words(0)
+   ```
 
 
 ## Author

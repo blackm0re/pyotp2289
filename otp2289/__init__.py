@@ -29,6 +29,7 @@ from .generator import (OTP_ALGO_MD5,
                         OTPChallengeException,
                         OTPGenerator,
                         OTPGeneratorException)
+from .server import OTPInvalidResponse, OTPState, OTPStateException
 
 
 __author__ = 'Simeon Simeonov'
@@ -50,4 +51,7 @@ __all__ = ['OTP_ALGO_MD5',
            'OTP_ALGO_SHA1',
            'OTPChallengeException',
            'OTPGenerator',
-           'OTPGeneratorException']
+           'OTPGeneratorException',
+           'OTPInvalidResponse',
+           'OTPState',
+           'OTPStateException']

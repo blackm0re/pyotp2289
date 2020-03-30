@@ -320,19 +320,19 @@ class OTPGenerator:
         :param hash_algo: The hash algo, defaults to OTP_ALGO_MD5
         :type hash_algo: int or str
 
-        :raises OTPGeneratorException: In case input does not validate
+        :raises OTPGeneratorException: In case the input does not validate
         """
         # enforce the rfc2289 constraints
+        self._seed = seed
+        if self._seed:  # the seed was set here. Validate it
+            self._seed = self.validate_seed(self._seed)
+        self._hash_algo = self.validate_hash_algo(hash_algo)
         if not isinstance(password, bytes):
             raise OTPGeneratorException('Password must be a byte-string')
         if len(password) < 10:
             raise OTPGeneratorException(
                 'Password must be longer than 10 bytes')
         self._password = password
-        self._seed = seed
-        if self._seed:  # the seed was set here. Validate it
-            self._seed = self.validate_seed(self._seed)
-        self._hash_algo = self.validate_hash_algo(hash_algo)
 
     @staticmethod
     def bit_pair_sum(bit_stream):
@@ -353,6 +353,31 @@ class OTPGenerator:
         for pair in zip(bit_stream[::2], bit_stream[1::2]):
             value += int(''.join(pair), 2)
         return value
+
+    @staticmethod
+    def bytes_to_tokens(hash_bytes):
+        """
+        Returns a 6 words token from bytes as specified by RFC-2289.
+
+        :param hash_bytes: The input bytes
+        :type hash_bytes: bytes
+
+        :return: 6 words tokens
+        :rtype: str
+        """
+        bit_stream = ''.join(
+            ['{0:0>8b}'.format(byte) for byte in hash_bytes])
+        bit_pair_sum = OTPGenerator.bit_pair_sum(bit_stream)
+        tokens = []
+        tokens.append(RFC1760_TOKENS[int(bit_stream[:11], 2)])
+        tokens.append(RFC1760_TOKENS[int(bit_stream[11:22], 2)])
+        tokens.append(RFC1760_TOKENS[int(bit_stream[22:33], 2)])
+        tokens.append(RFC1760_TOKENS[int(bit_stream[33:44], 2)])
+        tokens.append(RFC1760_TOKENS[int(bit_stream[44:55], 2)])
+        tokens.append(
+            RFC1760_TOKENS[int(
+                bit_stream[55:64] + '{0:0>8b}'.format(bit_pair_sum)[-2:], 2)])
+        return ' '.join(tokens)
 
     @staticmethod
     def get_tokens_from_challenge(challenge):
@@ -453,6 +478,50 @@ class OTPGenerator:
         )
 
     @staticmethod
+    def tokens_to_bytes(tokens_str):
+        """
+        Returns bytes from a 6 words token as specified by RFC-2289.
+
+        :param tokens_str: String representing 6 words tokens
+        :type tokens_str: str
+
+        :raises OTPGeneratorException: When the tokens_str is invalid
+
+        :return: 6 words tokens
+        :rtype: bytes
+        """
+        if not isinstance(tokens_str, str):
+            raise OTPGeneratorException('tokens must be a str')
+        tokens = tokens_str.split()
+        if len(tokens) != 6:
+            raise OTPGeneratorException(
+                'Tokens-string does not contain 6 tokens')
+        token_ints = []
+        try:
+            token_ints = [RFC1760_TOKENS.index(token.upper()) for token in
+                          tokens]
+        except ValueError:
+            raise OTPGeneratorException(
+                'One or more words not present in RFC1760')
+        # now we build a string of bits
+        bit_stream = format(token_ints[0], '011b')
+        bit_stream += format(token_ints[1], '011b')
+        bit_stream += format(token_ints[2], '011b')
+        bit_stream += format(token_ints[3], '011b')
+        bit_stream += format(token_ints[4], '011b')
+        bit_stream += format(token_ints[5], '011b')
+        # we have 66 bits: 64 digest + 2 bit pair sum (control number)
+        # RFC-2289: All OTP generators MUST calculate this checksum and all
+        # OTP servers MUST verify this checksum explicitly as part of the
+        # operation of decoding this representation of the one-time password.
+        if (
+                '{0:0>8b}'.format(OTPGenerator.bit_pair_sum(
+                    bit_stream[:64]))[-2:] != bit_stream[-2:]
+        ):
+            raise OTPGeneratorException('Invalid bit checksum')
+        return int(bit_stream[:64], 2).to_bytes(8, 'big')
+
+    @staticmethod
     def validate_hash_algo(hash_algo):
         """
         Validates the provided hash-algorithm.
@@ -503,6 +572,25 @@ class OTPGenerator:
                     'The seed MUST consist of purely alphanumeric characters')
         return seed
 
+    @staticmethod
+    def validate_step(step):
+        """
+        Validates the provided step as defined by RFC-2289.
+
+        :param seed: The step received from the challenge
+        :type seed: int
+
+        :raises OTPGeneratorException: In case step does not validate
+
+        :return: The validated (and very same) step
+        :rtype: int
+        """
+        if not isinstance(step, int):
+            raise OTPGeneratorException('Step value MUST be an int')
+        if step < 0:
+            raise OTPGeneratorException('Step value MUST be >= 0')
+        return step
+
     def generate_otp_hexdigest(self, step):
         """
         Generates the OTP hexdigest for the given step.
@@ -549,20 +637,7 @@ class OTPGenerator:
         :return: Six words (separated by single space) token for the given step
         :rtype: str
         """
-        digest = self._generate_otp_bytes(step)
-        bit_stream = ''.join(
-            ['{0:0>8b}'.format(byte) for byte in digest])
-        bit_pair_sum = self.bit_pair_sum(bit_stream)
-        tokens = list()
-        tokens.append(RFC1760_TOKENS[int(bit_stream[:11], 2)])
-        tokens.append(RFC1760_TOKENS[int(bit_stream[11:22], 2)])
-        tokens.append(RFC1760_TOKENS[int(bit_stream[22:33], 2)])
-        tokens.append(RFC1760_TOKENS[int(bit_stream[33:44], 2)])
-        tokens.append(RFC1760_TOKENS[int(bit_stream[44:55], 2)])
-        tokens.append(
-            RFC1760_TOKENS[int(
-                bit_stream[55:64] + '{0:0>8b}'.format(bit_pair_sum)[-2:], 2)])
-        return ' '.join(tokens)
+        return self.bytes_to_tokens(self._generate_otp_bytes(step))
 
     def generate_otp_words_from_challenge(self, challenge):
         """
@@ -641,10 +716,7 @@ class OTPGenerator:
         :return: The digest bytes for the given step
         :rtype: bytes
         """
-        if not isinstance(step, int):
-            raise OTPGeneratorException('Step value MUST be an int')
-        if step < 0:
-            raise OTPGeneratorException('Step value MUST be >= 0')
+        step = self.validate_step(step)
         digest = b''
         for _ in range(step + 1):
             hash_obj = hashlib.new(self._hash_algo)

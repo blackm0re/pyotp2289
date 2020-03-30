@@ -62,16 +62,6 @@ def test_constructor_exceptions():
     """
     # test the otp2289.OTPGenerator __init__ and validators
     with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
-        otp2289.OTPGenerator('1234567', 'TeStø'.encode(), otp2289.OTP_ALGO_MD5)
-    assert exc_info.type is otp2289.OTPGeneratorException
-    assert exc_info.value.args[0] == 'Password must be a byte-string'
-    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
-        otp2289.OTPGenerator('1234567'.encode(),
-                             'TeStø'.encode(),
-                             otp2289.OTP_ALGO_MD5)
-    assert exc_info.type is otp2289.OTPGeneratorException
-    assert exc_info.value.args[0] == 'Password must be longer than 10 bytes'
-    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
         otp2289.OTPGenerator('This is a test.'.encode(),
                              'TeStø'.encode(),
                              otp2289.OTP_ALGO_MD5)
@@ -108,6 +98,16 @@ def test_constructor_exceptions():
     assert exc_info.type is otp2289.generator.OTPGeneratorException
     assert exc_info.value.args[0] == ('foo is not supported by this version '
                                       'of the hashlib module')
+    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+        otp2289.OTPGenerator('1234567', 'TeSt', otp2289.OTP_ALGO_MD5)
+    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.value.args[0] == 'Password must be a byte-string'
+    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+        otp2289.OTPGenerator('1234567'.encode(),
+                             'TeSt',
+                             otp2289.OTP_ALGO_MD5)
+    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.value.args[0] == 'Password must be longer than 10 bytes'
 
 
 def test_md5():
