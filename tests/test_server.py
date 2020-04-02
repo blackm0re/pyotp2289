@@ -24,6 +24,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """Tests for otp2289.server"""
+import json
+
 import pytest
 
 import otp2289
@@ -82,3 +84,26 @@ def test_state_validation_sha1():
     assert state.response_validates('0xbb9e6ae1979d8ff4') is True
     assert state.response_validates('MILT VARY MAST OK SEES WENT') is True
     assert state.validated is True
+
+
+def test_store():
+    """Tests the OTPStore functionality"""
+    store_data = {'sgs': {'ot_hex': '0x7965e05436f5029f',
+                          'current_step': 1,
+                          'seed': 'TeSt',
+                          'hash_algo': 'md5'},
+                  'blackmore': {'ot_hex': '0x63d936639734385b',
+                                'current_step': 1,
+                                'seed': 'TeSt',
+                                'hash_algo': 'sha1'}}
+    store = otp2289.OTPStore(store_data)
+    assert len(store) == 2
+    assert isinstance(json.dumps(store.to_dict()), str)  # serializable?
+    assert store.response_validates('sgs', '0x9e876134d90499dd') is True
+    assert store.response_validates('sgs', '0x9e876134d90499dd') is False
+    sgs_state = store.get('sgs')
+    assert sgs_state in store
+    store.pop_state('sgs')
+    assert bool(store) is True
+    store.pop_state('blackmore')
+    assert bool(store) is False

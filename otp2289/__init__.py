@@ -29,12 +29,16 @@ from .generator import (OTP_ALGO_MD5,
                         OTPChallengeException,
                         OTPGenerator,
                         OTPGeneratorException)
-from .server import OTPInvalidResponse, OTPState, OTPStateException
+from .server import (OTPInvalidResponse,
+                     OTPState,
+                     OTPStateException,
+                     OTPStore,
+                     OTPStoreException)
 
 
 __author__ = 'Simeon Simeonov'
 __version__ = '1.0.0'
-__license__ = 'BSD-2'
+__license__ = 'BSD 2-Clause'
 
 
 def int_or_str(value):
@@ -54,4 +58,6 @@ __all__ = ['OTP_ALGO_MD5',
            'OTPGeneratorException',
            'OTPInvalidResponse',
            'OTPState',
-           'OTPStateException']
+           'OTPStateException',
+           'OTPStore',
+           'OTPStoreException']

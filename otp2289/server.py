@@ -36,6 +36,10 @@ class OTPStateException(Exception):
     """OTPStateException class"""
 
 
+class OTPStoreException(Exception):
+    """OTPStoreException class"""
+
+
 class OTPInvalidResponse(Exception):
     """OTPInvalidResponse class"""
 
@@ -80,10 +84,6 @@ class OTPState:
         self._current_digest = self.validate_hex(ot_hex)
         self._new_digest_hex = None  # set upon a successful validation
 
-    def __str__(self):
-        """Duplicate the challenge string"""
-        return f'otp-{self._hash_algo} {self._step} {self._seed} '
-
     @property
     def challenge_string(self):
         """challenge_string-property"""
@@ -92,9 +92,42 @@ class OTPState:
         return f'otp-{self._hash_algo} {self._step} {self._seed} '
 
     @property
+    def current_digest(self):
+        """current_digest-property"""
+        return self._current_digest
+
+    @property
+    def hash_algo(self):
+        """hash_algo-property"""
+        return self._hash_algo
+
+    @property
+    def seed(self):
+        """seed-property"""
+        return self._seed
+
+    @property
+    def step(self):
+        """step-property"""
+        return self._step
+
+    @property
     def validated(self):
         """validated-property"""
         return bool(self._new_digest_hex)
+
+    @classmethod
+    def from_dict(cls, dict_obj):
+        """
+        Returns an OTPState object from the dict-object
+
+        :param dict_obj: The dict object
+        :type dict_obj: dict
+
+        :return: A new OTPState object
+        :rtype: OTPStore
+        """
+        return cls(**dict_obj)
 
     @staticmethod
     def response_to_bytes(response):
@@ -152,6 +185,23 @@ class OTPState:
         except binascii.Error:
             raise OTPStateException('Invalid OT-hex')
 
+    def get_next_state(self):
+        """
+        Returns the next state for a validated OTPState.
+
+        This is a brand new OTPState object with the same hash_algo and seed
+        where step -= 1 and ot_hex = self._new_digest_hex
+
+        :return: The next OTPState if validated, None otherwise
+        :rtype: OTPState or None
+        """
+        if self._new_digest_hex is None:
+            return None
+        return OTPState(self._new_digest_hex,
+                        self._step - 1,
+                        self._seed,
+                        self._hash_algo)
+
     def response_validates(self, response, store_valid_response=True):
         """
         Validates the incoming response as specified by RFC-2289.
@@ -195,3 +245,185 @@ class OTPState:
             return False
         # this should not happen since the hash_algo is validated by the caller
         raise OTPInvalidResponse(f'Ivalid hash_algo: {self._hash_algo}')
+
+    def to_dict(self):
+        """
+        Returns a dict representation of the object.
+
+        This could be the base for a JSON serialization.
+
+        :return: The dict representation of the object
+        :rtype: dict
+        """
+        return {'ot_hex': binascii.hexlify(self._current_digest).decode(),
+                'current_step': self._step,
+                'seed': self._seed,
+                'hash_algo': self._hash_algo}
+
+
+class OTPStore:
+    """
+    OTPStore class
+
+    A helper / container class that stores OTPState objects in a 2 layered
+    dict structure represented by [domain][key].
+
+    The class could serve as a base class when implementing store backends.
+    """
+    def __init__(self, data=None):
+        """
+        Constructs an OTPStore object from data
+
+        :param data: The data object, defaults to None
+        :type data: object or None
+        """
+        self._data = {}  # {key1: {state1-data...}, key2: {state2-data...}}
+        self._states = {}  # OTPState: (domain, key) - dict
+        if data is not None:
+            self._add_data(data)
+
+    def __contains__(self, state):
+        """membership test"""
+        return state in self._states
+
+    def __iter__(self):
+        """iterator for OTPStore"""
+        return iter(self._data)
+
+    def __len__(self):
+        """len() implementation"""
+        return len(self._data)
+
+    @property
+    def data(self):
+        """
+        data-property
+
+        Exposes the entire raw-data structure (dict).
+        Use the high level methods when possible!
+        """
+        return self._data
+
+    @property
+    def states(self):
+        """
+        states-property
+
+        Exposes the entire states structure (dict).
+        Use the high level methods when possible!
+        """
+        return self._states
+
+    def add_state(self, key, state):
+        """
+        Adds an OTPState object with a given key.
+
+        :param key: The key under which to add the state
+        :type key: str
+
+        :param state: The OTPState object
+        :type state: OTPState
+
+        :raises OTPStoreException: On failure
+        """
+        if not isinstance(key, str):
+            raise OTPStoreException('key must be a str')
+        if not isinstance(state, OTPState):
+            raise OTPStoreException('state must be an OTPState-object')
+        self._data[key] = state
+        self._states[state] = key
+
+    def get(self, key, default=None):
+        """A wrapper for dict.get"""
+        return self._data.get(key, default)
+
+    def items(self):
+        """A wrapper for dict.items"""
+        return self._data.items()
+
+    def pop_state(self, key):
+        """
+        Removes specified key and returns the corresponding OTPState-object.
+
+        :param key: The key
+        :type key: str
+
+        :raises KeyError: If key does not exist
+
+        :raises OTPStoreException: On failure
+
+        :return: The state corresponding to the key
+        :rtype: OTPState
+        """
+        if not isinstance(key, str):
+            raise OTPStoreException('key must be a str')
+        state = self._data.pop(key)
+        self._states.pop(state)
+        return state
+
+    def response_validates(self, key, response, store_valid_response=True):
+        """
+        A method that wraps around OTPState.response_validates and
+        OTPState.get_next_state.
+
+        The response is validated against the OTPState object that corresponds
+        to key (if any). If store_valid_response is True, the state is replaced
+        by the next state on successful validation.
+
+        :param key: The key
+        :type key: str
+
+        :param response: The response to this state (its challenge)
+        :type response: str
+
+        :param store_valid_response: Should a valid response be stored
+        :type store_valid_response: bool
+
+        :raises KeyError: If the key is not present
+
+        :raises OTPInvalidResponse: If the response does not match this state
+
+        :return: Returns True if response validates, False otherwise
+        :rtype: bool
+        """
+        state = self._data[key]
+        rvalue = state.response_validates(response, store_valid_response)
+        if rvalue and store_valid_response:
+            next_state = state.get_next_state()
+            self._data[key] = next_state
+            self._states[next_state] = key
+            self._states.pop(state)
+        return rvalue
+
+    def to_dict(self):
+        """
+        Returns a dict representation of the object.
+
+        This could be the base for a JSON serialization.
+
+        :return: The dict representation of the object
+        :rtype: dict
+        """
+        return {key: state.to_dict() for key, state in self._data.items()}
+
+    def _add_data(self, dict_obj):
+        """
+        Adds data from a dict object (dict_obj).
+
+        This method should probably be either overloaded or wrapped
+        in a child class.
+
+        dict_obj has the following format:
+        {'key': {'ot_hex': val1,
+                 'current_step': val2,
+                 'seed': val3,
+                 'hash_algo': val4},
+         ...., ....}
+
+        :param dict_obj: The dict-object
+        :type dict_obj: dict
+        """
+        if not dict_obj:
+            return
+        for key, state_dict in dict_obj.items():
+            self.add_state(key, OTPState(**state_dict))
