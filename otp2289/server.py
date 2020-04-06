@@ -58,10 +58,9 @@ class OTPState:
         Constructs an OTPState object with the given arguments.
 
         Keyword Arguments:
-        :param ot_hex: The one-time hex from the last successful
-                       authentication or the first OTP of a newly
-                       initialized sequence
-        :type ot_hex: str
+        :param ot_hex: The one-time hex from the last successful authentication
+                       or None for a newly initialized sequence.
+        :type ot_hex: str or None
 
         :param current_step: The current step that is sent with the challenge
         :type current_step: int
@@ -81,7 +80,9 @@ class OTPState:
             self._step = OTPGenerator.validate_step(current_step)
         except OTPGeneratorException as exp:
             raise OTPStateException(exp.args[0])
-        self._current_digest = self.validate_hex(ot_hex)
+        self._current_digest = None
+        if ot_hex is not None:
+            self._current_digest = self.validate_hex(ot_hex)
         self._new_digest_hex = None  # set upon a successful validation
 
     @property
@@ -223,6 +224,7 @@ class OTPState:
         if self._hash_algo == 'md5':
             digest = hashlib.md5(response_bytes).digest()
             if (
+                    self._current_digest is None or
                     OTPGenerator.strxor(digest[0:8], digest[8:]) ==
                     self._current_digest
             ):
@@ -234,6 +236,7 @@ class OTPState:
         if self._hash_algo == 'sha1':
             digest = hashlib.sha1(response_bytes).digest()
             if (
+                    self._current_digest is None or
                     OTPGenerator.sha1_digest_folding(
                         hashlib.sha1(
                             response_bytes).digest()) == self._current_digest
@@ -255,7 +258,10 @@ class OTPState:
         :return: The dict representation of the object
         :rtype: dict
         """
-        return {'ot_hex': binascii.hexlify(self._current_digest).decode(),
+        ot_hex = self._current_digest
+        if ot_hex is not None:
+            ot_hex = binascii.hexlify(self._current_digest).decode()
+        return {'ot_hex': ot_hex,
                 'current_step': self._step,
                 'seed': self._seed,
                 'hash_algo': self._hash_algo}

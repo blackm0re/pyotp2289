@@ -70,19 +70,98 @@ one-time password."
 
 ## Examples
 
+We define the two entities: *client* and *server*. The entire application of
+RFC-2289 consists of interactions between them.
+
    ```python
-   import getpass
+   #
+   import getpass  # client only
 
-   import otp2289
+   import otp2289  # client and server
 
-   # create a generator object
-   passwd_bytes = getpass.getpass().encode()  # Type: This is a test.
+   # the server starts by picking:
+   # - algorithm (MD5 or SHA1) to use
+   # - seed - 1 to 16 alphanumeric characters. The seed must never be reused.
+   # - initial step - number (int) that will be decremented for each OTP.
+   # In FreeBSD, the following default values are used:
+   # - MD5
+   # - the first two letters of the hostname + 5 random digits for seed
+   # - initial step: 500
+
+   # the client receives those values, chooses a strong password and creates
+   # initialization digest (hash). The password 'This is a test.' will give you
+   # the same results as in the following example.
+   passwd_bytes = getpass.getpass().encode()  # Fetch the password as bytes
    generator = otp2289.generator.OTPGenerator(passwd_bytes,
                                               'TesT',
                                               otp2289.OTP_ALGO_MD5)
-   generator.generate_otp_hexdigest(0)
-   generator.gen.generate_otp_words(0)
+   digest = generator.generate_otp_hexdigest(500)
+   # digest is now: 0x2b8d82b6ac14346c
+   # the client sends it to the server
+
+   # the server creates the first state. Note that step is decremented by 1:
+   state = otp2289.server.OTPState(digest, 499, 'TesT', otp2289.OTP_ALGO_MD5)
+   # the state can be stored in a OTPStore container:
+   store = otp2289.server.OTPStore()
+   # key can be any str that can be used to reference the state (f.i username)
+   store.add_state('myusername', state)  # where key can be any str that can be
+   # OTPStore is provided only for convenience as it is not part of RFC-2289.
+   # The server can store states any way it wants. A normal dict is also fine.
+   # Once the initial state is set on the server, the client can authenticate.
+
+   # Upon authentication request (f.i. login), the server issues a challenge
+   # based on the state:
+   challenge = state.challenge_string  # challenge is now 'otp-md5 499 TesT '
+
+   # the client can now respond by using (or recreating) the same generator
+   # created earlier. RFC-2289 defines two types of responses:
+   # - hex (like '0x2b8d82b6ac14346c') - more suited for automation
+   # - tokens consisting of 6 short words - better when responding manually
+   hex_response = generator.generate_otp_hexdigest(499)  # '0x6323f96296a2526b'
+   token_response = generator.generate_otp_words(499)
+   # token_response is now: 'CANT JAW BITS NU LO PUP'
+   # a possible shortcut may be to use the challenge-string directly:
+   hex_response = generator.generate_otp_hexdigest_from_challenge(challenge)
+   token_response = generator.generate_otp_words_from_challenge(challenge)
+   # ... giving the same results.
+
+   # once the response is received, the server validates it by yet again using
+   # the current state:
+   result = state.response_validates(hex_response)
+   # or
+   result = state.response_validates(token_response)
+   # result should be True if the response matches the state, False if not
+   # in case of invalid response or response checksum doesn't match, a
+   # otp2289.server.OTPInvalidResponse exception is raised.
+
+   # once the state has successfully validated the corresponding response,
+   the state **must never be used again** and a state corresponding to the
+   "next" (498) step created.
+   state = state.get_next_state()
+
+   # the next authentication attempt...
+   challenge = state.challenge_string  # challenge is now 'otp-md5 498 TesT '
+   # ... and on the client side...
+   hex_response = generator.generate_otp_hexdigest_from_challenge(challenge)
+   # etc. etc...
    ```
+
+If you don't care about developing applications in Python and only care about
+generating one-time passwords (tokens / hex digests) and authenticating with
+existing solutions (f.i. FreeBSD servers), pyotp2289 comes with a simple CLI:
+
+   ```bash
+   python -m otp2289 --generate-otp-response -f token -i 498 -s TesT
+   ```
+
+... will prompt for password and generate a 6 words (token) response.
+
+   ```bash
+   python -m otp2289 --generate-otp-range -f token -i 498 -s TesT
+   ```
+
+... will prompt for password and generate a range of 4 one-time passwords
+starting from (and including) 498.
 
 
 ## Author
@@ -95,5 +174,5 @@ Simeon Simeonov - sgs @ Freenode
 Copyright (c) 2020, Simeon Simeonov
 All rights reserved.
 
-[licensed](LICENSE) under the BSD 2-clause.
+[Licensed](LICENSE) under the BSD 2-clause.
 SPDX-License-Identifier: BSD-2-Clause-FreeBSD
