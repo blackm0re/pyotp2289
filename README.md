@@ -9,13 +9,11 @@ It requires no additional libraries.
 ## General
 
 The main reason for writing this library was the need to login into my
-FreeBSD servers using the [opiepasswd]
-(https://www.freebsd.org/cgi/man.cgi?query=opiepasswd&sektion=1&manpath=freebsd-release-ports)
-as described in [FreeBSD Handbook]
-(https://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/one-time-passwords.html).
+FreeBSD servers using the [opiepasswd](https://www.freebsd.org/cgi/man.cgi?query=opiepasswd&sektion=1&manpath=freebsd-release-ports)
+as described in [FreeBSD Handbook](https://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/one-time-passwords.html).
 
 I decided to license the library under the
-[Simplified BSD License / 2-clause BSD license](LICENSE) and not under the
+[Simplified BSD License / 2-clause BSD license](https://github.com/blackm0re/pyotp2289/blob/master/LICENSE) and not under the
 (L)GPL-3 as I usually do.
 
 I hope that somebody will find it useful.
@@ -81,7 +79,6 @@ We define the two entities: *client* and *server*. The entire application of
 RFC-2289 consists of interactions between them.
 
    ```python
-   #
    import getpass  # client only
 
    import otp2289  # client and server
@@ -153,9 +150,9 @@ RFC-2289 consists of interactions between them.
    # etc. etc...
    ```
 
-Please visit the [API documentation]
-(http://gnulover.simeonov.no/docs/api/pyotp2289/latest/) for a complete
-reference.
+Please visit the
+[API documentation](http://gnulover.simeonov.no/docs/api/pyotp2289/latest/) for
+a complete reference.
 
 If you don't care about developing applications in Python and only care about
 generating one-time passwords (tokens / hex digests) and authenticating with
@@ -185,10 +182,10 @@ pyotp2289 is hosted on GitHub: https://github.com/blackm0re/pyotp2289
 Simeon Simeonov - sgs @ Freenode
 
 
-## [License](LICENSE)
+## [License](https://github.com/blackm0re/pyotp2289/blob/master/LICENSE)
 
 Copyright (c) 2020, Simeon Simeonov
 All rights reserved.
 
-[Licensed](LICENSE) under the BSD 2-clause.
+[Licensed](https://github.com/blackm0re/pyotp2289/blob/master/LICENSE) under the BSD 2-clause.
 SPDX-License-Identifier: BSD-2-Clause-FreeBSD
