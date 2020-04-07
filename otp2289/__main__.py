@@ -55,9 +55,9 @@ def generate_otp_response(args):
     :param args: The arguments assigned from argparse
     :type args: argparse.Namespace
 
-    :raises OTPChallengeException: In case of invalid challenge
+    :raises otp2289.OTPChallengeException: If the challenge is invalid
 
-    :raises OTPGeneratorException: In case of wrong generator parameters
+    :raises otp2289.OTPGeneratorException: If generator parameters are wrong
 
     :return: The response string
     :rtype: str
@@ -89,9 +89,9 @@ def generate_otp_range(args):
     :param args: The arguments assigned from argparse
     :type args: argparse.Namespace
 
-    :raises OTPChallengeException: In case of invalid challenge
+    :raises otp2289.OTPChallengeException: If the challenge is invalid
 
-    :raises OTPGeneratorException: In case of wrong generator parameters
+    :raises otp2289.OTPGeneratorException: If generator parameters are wrong
 
     :return: The responses string
     :rtype: str
@@ -137,9 +137,9 @@ def initiate_new_sequence(args):
     :param args: The arguments assigned from argparse
     :type args: argparse.Namespace
 
-    :raises OTPChallengeException: In case of invalid challenge
+    :raises otp2289.OTPChallengeException: If the challenge is invalid
 
-    :raises OTPGeneratorException: In case of wrong generator parameters
+    :raises otp2289.OTPGeneratorException: If generator parameters are wrong
 
     :return: The response string
     :rtype: str

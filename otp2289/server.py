@@ -71,7 +71,7 @@ class OTPState:
         :param hash_algo: The hash algo, defaults to OTP_ALGO_MD5
         :type hash_algo: int or str
 
-        :raises OTPStateException: In case the input does not validate
+        :raises otp2289.OTPStateException: If the input does not validate
         """
         # enforce the rfc2289 constraints
         try:
@@ -126,7 +126,7 @@ class OTPState:
         :type dict_obj: dict
 
         :return: A new OTPState object
-        :rtype: OTPStore
+        :rtype: otp2289.OTPStore
         """
         return cls(**dict_obj)
 
@@ -144,8 +144,9 @@ class OTPState:
         :param response: The response to this state (its challenge)
         :type response: str
 
-        :raises OTPInvalidResponse: If the response is corrupt / illegal,
-                                    but not if it simply does not validate
+        :raises otp2289.OTPInvalidResponse: If the response is corrupt/illegal,
+                                            but not if it simply does not
+                                            validate
 
         :return: The bytes representation of response (if any)
         :rtype: bytes
@@ -168,7 +169,7 @@ class OTPState:
         :param ot_hex: The one-time hex to validate
         :type ot_hex: str
 
-        :raises OTPStateException: In case hex does not validate
+        :raises otp2289.OTPStateException: If hex does not validate
 
         :return: The validated hex (without leading 0x) converted to bytes
         :rtype: bytes
@@ -194,7 +195,7 @@ class OTPState:
         where step -= 1 and ot_hex = self._new_digest_hex
 
         :return: The next OTPState if validated, None otherwise
-        :rtype: OTPState or None
+        :rtype: otp2289.OTPState or None
         """
         if self._new_digest_hex is None:
             return None
@@ -213,7 +214,8 @@ class OTPState:
         :param store_valid_response: Should a valid response be stored
         :type store_valid_response: bool
 
-        :raises OTPInvalidResponse: If the response does not match this state
+        :raises otp2289.OTPInvalidResponse: If the response does not match
+                                            this state
 
         :return: Returns True if response validates, False otherwise
         :rtype: bool
@@ -328,9 +330,9 @@ class OTPStore:
         :type key: str
 
         :param state: The OTPState object
-        :type state: OTPState
+        :type state: otp2289.OTPState
 
-        :raises OTPStoreException: On failure
+        :raises otp2289.OTPStoreException: On failure
         """
         if not isinstance(key, str):
             raise OTPStoreException('key must be a str')
@@ -356,10 +358,10 @@ class OTPStore:
 
         :raises KeyError: If key does not exist
 
-        :raises OTPStoreException: On failure
+        :raises otp2289.OTPStoreException: On failure
 
         :return: The state corresponding to the key
-        :rtype: OTPState
+        :rtype: otp2289.OTPState
         """
         if not isinstance(key, str):
             raise OTPStoreException('key must be a str')
@@ -387,7 +389,8 @@ class OTPStore:
 
         :raises KeyError: If the key is not present
 
-        :raises OTPInvalidResponse: If the response does not match this state
+        :raises otp2289.OTPInvalidResponse: If the response does not match
+                                            this state
 
         :return: Returns True if response validates, False otherwise
         :rtype: bool

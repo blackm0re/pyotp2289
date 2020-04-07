@@ -310,7 +310,6 @@ class OTPGenerator:
         """
         Constructs an OTPGenerator object with a given password and seed.
 
-        Keyword Arguments:
         :param password: The password string
         :type password: bytes
 
@@ -320,7 +319,7 @@ class OTPGenerator:
         :param hash_algo: The hash algo, defaults to OTP_ALGO_MD5
         :type hash_algo: int or str
 
-        :raises OTPGeneratorException: In case the input does not validate
+        :raises otp2289.OTPGeneratorException: If the input does not validate
         """
         # enforce the rfc2289 constraints
         self._seed = seed
@@ -389,7 +388,7 @@ class OTPGenerator:
         :param challenge: The challenge string described in RFC-2289
         :type challenge: str
 
-        :raises OTPChallengeException: When the challenge string is invalid
+        :raises otp2289.OTPChallengeException: If the challenge is invalid
 
         :return: (seed, hash_algo, step) tuple.
         :rtype: tuple
@@ -485,7 +484,7 @@ class OTPGenerator:
         :param tokens_str: String representing 6 words tokens
         :type tokens_str: str
 
-        :raises OTPGeneratorException: When the tokens_str is invalid
+        :raises otp2289.OTPGeneratorException: When the tokens_str is invalid
 
         :return: 6 words tokens
         :rtype: bytes
@@ -529,7 +528,7 @@ class OTPGenerator:
         :param hash_algo: The hash algo, defaults to OTP_ALGO_MD5
         :type hash_algo: int or str
 
-        :raises OTPGeneratorException: In case hash_algo does not validate
+        :raises otp2289.OTPGeneratorException: If hash_algo does not validate
 
         :return: The validated hash_algo in str-form
         :rtype: str
@@ -556,7 +555,7 @@ class OTPGenerator:
         :param seed: The seed received from the challenge, defaults to ''
         :type seed: str
 
-        :raises OTPGeneratorException: In case seed does not validate
+        :raises otp2289.OTPGeneratorException: If seed does not validate
 
         :return: The validated (and very same) seed
         :rtype: str
@@ -580,7 +579,7 @@ class OTPGenerator:
         :param seed: The step received from the challenge
         :type seed: int
 
-        :raises OTPGeneratorException: In case step does not validate
+        :raises otp2289.OTPGeneratorException: If step does not validate
 
         :return: The validated (and very same) step
         :rtype: int
@@ -595,7 +594,6 @@ class OTPGenerator:
         """
         Generates the OTP hexdigest for the given step.
 
-        Keyword Arguments:
         :param step: The step to generate OTP for
         :type step: int
 
@@ -614,7 +612,6 @@ class OTPGenerator:
         extract these parameters. The syntax of the challenge is:
         otp-<algorithm identifier> <sequence integer> <seed>
 
-        Keyword Arguments:
         :param challenge: The challenge string
         :type challenge: str
 
@@ -630,7 +627,6 @@ class OTPGenerator:
         """
         Generates the OTP six words token for the given step.
 
-        Keyword Arguments:
         :param step: The step to generate OTP for
         :type step: int
 
@@ -649,7 +645,6 @@ class OTPGenerator:
         extract these parameters. The syntax of the challenge is:
         otp-<algorithm identifier> <sequence integer> <seed>
 
-        Keyword Arguments:
         :param challenge: The challenge string
         :type challenge: str
 
@@ -709,7 +704,6 @@ class OTPGenerator:
         """
         Generates the OTP bytes for the given step.
 
-        Keyword Arguments:
         :param step: The step to generate OTP for
         :type step: int
 

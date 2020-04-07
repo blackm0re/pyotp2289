@@ -21,6 +21,13 @@ I decided to license the library under the
 I hope that somebody will find it useful.
 
 
+## Installation
+
+   ```bash
+   pip install pyotp2289
+   ```
+
+
 ## Overview of RFC-2289
 
 RFC-2289 describes a one-time password authentication system (OTP):
@@ -146,6 +153,10 @@ RFC-2289 consists of interactions between them.
    # etc. etc...
    ```
 
+Please visit the [API documentation]
+(http://gnulover.simeonov.no/docs/api/pyotp2289/latest/) for a complete
+reference.
+
 If you don't care about developing applications in Python and only care about
 generating one-time passwords (tokens / hex digests) and authenticating with
 existing solutions (f.i. FreeBSD servers), pyotp2289 comes with a simple CLI:
@@ -162,6 +173,11 @@ existing solutions (f.i. FreeBSD servers), pyotp2289 comes with a simple CLI:
 
 ... will prompt for password and generate a range of 4 one-time passwords
 starting from (and including) 498.
+
+
+## Support and contributing
+
+pyotp2289 is hosted on GitHub: https://github.com/blackm0re/pyotp2289
 
 
 ## Author
