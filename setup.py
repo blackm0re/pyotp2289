@@ -21,6 +21,11 @@ setuptools.setup(
     url='https://github.com/blackm0re/pyotp2289',
     packages=setuptools.find_packages(),
     exclude_package_data={'': ['.gitignore']},
+    entry_points={
+        'console_scripts': [
+            'otp2289=otp2289.__main__:main',
+        ],
+    },
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
@@ -37,6 +42,8 @@ setuptools.setup(
     project_urls={
         'Bug Reports': 'https://github.com/blackm0re/pyotp2289/issues',
         'Source': 'https://github.com/blackm0re/pyotp2289',
+        'API Documentation': (
+            'http://gnulover.simeonov.no/docs/api/pyotp2289/latest/')
     },
     python_requires='>=3.6',
 )
