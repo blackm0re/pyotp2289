@@ -333,6 +333,11 @@ class OTPGenerator:
                 'Password must be longer than 10 bytes')
         self._password = password
 
+    def __repr__(self):
+        """repr implementation"""
+        return (f'{self.__class__} at {id(self)} (seed={self._seed}, '
+                f'hash_algo={self._hash_algo})')
+
     @staticmethod
     def bit_pair_sum(bit_stream):
         """

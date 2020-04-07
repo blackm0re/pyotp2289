@@ -85,6 +85,13 @@ class OTPState:
             self._current_digest = self.validate_hex(ot_hex)
         self._new_digest_hex = None  # set upon a successful validation
 
+    def __repr__(self):
+        """repr implementation"""
+        return (f'{self.__class__} at {id(self)} '
+                f'(ot_hex={self._current_digest}, current_step={self._step}, '
+                f'seed={self._seed}, '
+                f'hash_algo={self._hash_algo})')
+
     @property
     def challenge_string(self):
         """challenge_string-property"""
