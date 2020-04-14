@@ -21,8 +21,18 @@ I hope that somebody will find it useful.
 
 ## Installation
 
+pip (pypi):
+
    ```bash
    pip install pyotp2289
+   ```
+
+
+Gentoo:
+
+   ```bash
+   layman -a sgs
+   emerge dev-python/pyotp2289
    ```
 
 
