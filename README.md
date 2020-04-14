@@ -21,14 +21,14 @@ I hope that somebody will find it useful.
 
 ## Installation
 
-pip (pypi):
+### pip (pypi)
 
    ```bash
    pip install pyotp2289
    ```
 
 
-Gentoo:
+### Gentoo
 
    ```bash
    layman -a sgs
