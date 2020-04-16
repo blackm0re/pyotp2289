@@ -36,6 +36,19 @@ I hope that somebody will find it useful.
    ```
 
 
+### Fedora ( >= 31)
+
+Set up a custom repo as described: https://pkg.pichove.org/Fedora/README.txt
+
+Key fingerprint: A664 5797 661E 2F47 3DD3  FF06 BCE7 0555 C3BB 08F7
+
+Install the package:
+
+   ```bash
+   sudo dnf install python3-pyotp2289
+   ```
+
+
 ## Overview of RFC-2289
 
 RFC-2289 describes a one-time password authentication system (OTP):
