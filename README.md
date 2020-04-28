@@ -28,6 +28,16 @@ I hope that somebody will find it useful.
    ```
 
 
+### FreeBSD
+
+`pyotp2289` is included in the official ports-tree.
+
+   ```bash
+   cd /usr/ports/security/py-pyotp2289
+   make install clean
+   ```
+
+
 ### Gentoo
 
    ```bash
