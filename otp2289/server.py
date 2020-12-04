@@ -79,7 +79,7 @@ class OTPState:
             self._hash_algo = OTPGenerator.validate_hash_algo(hash_algo)
             self._step = OTPGenerator.validate_step(current_step)
         except OTPGeneratorException as exp:
-            raise OTPStateException(exp.args[0])
+            raise OTPStateException(exp.args[0]) from None
         self._current_digest = None
         if ot_hex is not None:
             self._current_digest = self.validate_hex(ot_hex)
@@ -166,7 +166,7 @@ class OTPState:
                 return OTPState.validate_hex(response)
             except OTPStateException:
                 raise OTPInvalidResponse(
-                    'The response is neither a valid token or hex')
+                    'The response is neither a valid token or hex') from None
 
     @staticmethod
     def validate_hex(ot_hex):
@@ -192,7 +192,7 @@ class OTPState:
         try:
             return binascii.unhexlify(ot_hex)
         except binascii.Error:
-            raise OTPStateException('Invalid OT-hex')
+            raise OTPStateException('Invalid OT-hex') from None
 
     def get_next_state(self):
         """

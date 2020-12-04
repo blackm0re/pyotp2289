@@ -407,7 +407,7 @@ class OTPGenerator:
             hash_algo, step, seed = challenge[4:].split()
             return (seed, hash_algo, int(step))
         except ValueError:
-            raise OTPChallengeException('Invalid challenge')
+            raise OTPChallengeException('Invalid challenge') from None
 
     @staticmethod
     def sha1_digest_folding(sha1_digest):
@@ -506,7 +506,7 @@ class OTPGenerator:
                           tokens]
         except ValueError:
             raise OTPGeneratorException(
-                'One or more words not present in RFC1760')
+                'One or more words not present in RFC1760') from None
         # now we build a string of bits
         bit_stream = format(token_ints[0], '011b')
         bit_stream += format(token_ints[1], '011b')
