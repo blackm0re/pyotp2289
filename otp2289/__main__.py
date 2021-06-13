@@ -165,7 +165,7 @@ def main(args=None):
     parser = argparse.ArgumentParser(
         prog=__package__,
         epilog=(f'%(prog)s {otp2289.__version__} by Simeon Simeonov '
-                '(sgs @ Freenode)'),
+                '(sgs @ LiberaChat)'),
         description='The following options are available')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(

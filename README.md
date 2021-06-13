@@ -212,7 +212,7 @@ pyotp2289 is hosted on GitHub: https://github.com/blackm0re/pyotp2289
 
 ## Author
 
-Simeon Simeonov - sgs @ Freenode
+Simeon Simeonov - sgs @ LiberaChat
 
 
 ## [License](https://github.com/blackm0re/pyotp2289/blob/master/LICENSE)
