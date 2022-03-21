@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 #
-# Copyright (c) 2020, Simeon Simeonov
+# Copyright (c) 2020-2022 Simeon Simeonov
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,6 @@
 import binascii
 import hashlib
 import string
-
 
 OTP_ALGO_MD5 = 1
 OTP_ALGO_SHA1 = 2
@@ -306,7 +305,12 @@ class OTPChallengeException(Exception):
 class OTPGenerator:
     """OTPGenerator class"""
 
-    def __init__(self, password, seed='', hash_algo=OTP_ALGO_MD5):
+    def __init__(
+        self,
+        password: bytes,
+        seed: str = '',
+        hash_algo=OTP_ALGO_MD5,
+    ):
         """
         Constructs an OTPGenerator object with a given password and seed.
 
@@ -330,16 +334,19 @@ class OTPGenerator:
             raise OTPGeneratorException('Password must be a byte-string')
         if len(password) < 10:
             raise OTPGeneratorException(
-                'Password must be longer than 10 bytes')
+                'Password must be longer than 10 bytes'
+            )
         self._password = password
 
     def __repr__(self):
         """repr implementation"""
-        return (f'{self.__class__} at {id(self)} (seed={self._seed}, '
-                f'hash_algo={self._hash_algo})')
+        return (
+            f'{self.__class__} at {id(self)} (seed={self._seed}, '
+            f'hash_algo={self._hash_algo})'
+        )
 
     @staticmethod
-    def bit_pair_sum(bit_stream):
+    def bit_pair_sum(bit_stream: str) -> int:
         """
         Split bit_stream in bit-pairs and sum them all together.
 
@@ -359,7 +366,7 @@ class OTPGenerator:
         return value
 
     @staticmethod
-    def bytes_to_tokens(hash_bytes):
+    def bytes_to_tokens(hash_bytes: bytes) -> str:
         """
         Returns a 6 words token from bytes as specified by RFC-2289.
 
@@ -369,8 +376,7 @@ class OTPGenerator:
         :return: 6 words tokens
         :rtype: str
         """
-        bit_stream = ''.join(
-            ['{0:0>8b}'.format(byte) for byte in hash_bytes])
+        bit_stream = ''.join([f'{byte:0>8b}' for byte in hash_bytes])
         bit_pair_sum = OTPGenerator.bit_pair_sum(bit_stream)
         tokens = []
         tokens.append(RFC1760_TOKENS[int(bit_stream[:11], 2)])
@@ -379,12 +385,17 @@ class OTPGenerator:
         tokens.append(RFC1760_TOKENS[int(bit_stream[33:44], 2)])
         tokens.append(RFC1760_TOKENS[int(bit_stream[44:55], 2)])
         tokens.append(
-            RFC1760_TOKENS[int(
-                bit_stream[55:64] + '{0:0>8b}'.format(bit_pair_sum)[-2:], 2)])
+            RFC1760_TOKENS[
+                int(
+                    bit_stream[55:64] + f'{bit_pair_sum:0>8b}'[-2:],
+                    2,
+                )
+            ]
+        )
         return ' '.join(tokens)
 
     @staticmethod
-    def get_tokens_from_challenge(challenge):
+    def get_tokens_from_challenge(challenge: str) -> tuple:
         """
         Returns tokens (seed, hash_algo and step) from a challenge string.
 
@@ -410,7 +421,7 @@ class OTPGenerator:
             raise OTPChallengeException('Invalid challenge') from None
 
     @staticmethod
-    def sha1_digest_folding(sha1_digest):
+    def sha1_digest_folding(sha1_digest: bytes) -> bytes:
         """
         Implementation of the 160bit -> 64bit folding algorithm
         for sha1 digest.
@@ -425,14 +436,17 @@ class OTPGenerator:
             raise OTPGeneratorException('sha1_digest must be of type bytes')
         if len(sha1_digest) != 20:
             raise OTPGeneratorException(
-                'sha1_digest must be 160 bits (20 bytes) long')
+                'sha1_digest must be 160 bits (20 bytes) long'
+            )
         digested = list(5 * b'i')  # 5 bytes (40 bits)
         result = list(8 * b'x')  # 8 bytes (64 bits)
         for i in range(5):
-            digested[i] = (((sha1_digest[i * 4 + 0] & 0xff) << 24) |
-                           ((sha1_digest[i * 4 + 1] & 0xff) << 16) |
-                           ((sha1_digest[i * 4 + 2] & 0xff) << 8) |
-                           (sha1_digest[i * 4 + 3] & 0xff))
+            digested[i] = (
+                ((sha1_digest[i * 4 + 0] & 0xFF) << 24)
+                | ((sha1_digest[i * 4 + 1] & 0xFF) << 16)
+                | ((sha1_digest[i * 4 + 2] & 0xFF) << 8)
+                | (sha1_digest[i * 4 + 3] & 0xFF)
+            )
         # sha.digest[0] ^= sha.digest[2];
         # sha.digest[1] ^= sha.digest[3];
         # sha.digest[0] ^= sha.digest[4];
@@ -446,18 +460,18 @@ class OTPGenerator:
         # result[j+3] = (unsigned char)((sha.digest[i] >> 24) & 0xff);
         # }
         # just hardcoding the two iterations for better efficiency
-        result[0] = digested[0] & 0xff
-        result[1] = (digested[0] >> 8) & 0xff
-        result[2] = (digested[0] >> 16) & 0xff
-        result[3] = (digested[0] >> 24) & 0xff
-        result[4] = digested[1] & 0xff
-        result[5] = (digested[1] >> 8) & 0xff
-        result[6] = (digested[1] >> 16) & 0xff
-        result[7] = (digested[1] >> 24) & 0xff
+        result[0] = digested[0] & 0xFF
+        result[1] = (digested[0] >> 8) & 0xFF
+        result[2] = (digested[0] >> 16) & 0xFF
+        result[3] = (digested[0] >> 24) & 0xFF
+        result[4] = digested[1] & 0xFF
+        result[5] = (digested[1] >> 8) & 0xFF
+        result[6] = (digested[1] >> 16) & 0xFF
+        result[7] = (digested[1] >> 24) & 0xFF
         return bytes(result)
 
     @staticmethod
-    def strxor(byte_str1, byte_str2):
+    def strxor(byte_str1: bytes, byte_str2: bytes) -> bytes:
         """
         Implementation of strxor similar to the one provided by pycrypto.
 
@@ -472,17 +486,17 @@ class OTPGenerator:
         """
         if not (isinstance(byte_str1, bytes) and isinstance(byte_str2, bytes)):
             raise OTPGeneratorException(
-                'byte_str1 and byte_str2 must be of type bytes')
+                'byte_str1 and byte_str2 must be of type bytes'
+            )
         length = len(byte_str1)
         if length != len(byte_str2) or length < 1:
             raise OTPGeneratorException(
-                'byte_str1 and byte_str2 must be of the same length > 0')
-        return bytes(
-            [byte_str1[i] ^ byte_str2[i] for i in range(length)]
-        )
+                'byte_str1 and byte_str2 must be of the same length > 0'
+            )
+        return bytes([byte_str1[i] ^ byte_str2[i] for i in range(length)])
 
     @staticmethod
-    def tokens_to_bytes(tokens_str):
+    def tokens_to_bytes(tokens_str: str) -> bytes:
         """
         Returns bytes from a 6 words token as specified by RFC-2289.
 
@@ -499,14 +513,17 @@ class OTPGenerator:
         tokens = tokens_str.split()
         if len(tokens) != 6:
             raise OTPGeneratorException(
-                'Tokens-string does not contain 6 tokens')
+                'Tokens-string does not contain 6 tokens'
+            )
         token_ints = []
         try:
-            token_ints = [RFC1760_TOKENS.index(token.upper()) for token in
-                          tokens]
+            token_ints = [
+                RFC1760_TOKENS.index(token.upper()) for token in tokens
+            ]
         except ValueError:
             raise OTPGeneratorException(
-                'One or more words not present in RFC1760') from None
+                'One or more words not present in RFC1760'
+            ) from None
         # now we build a string of bits
         bit_stream = format(token_ints[0], '011b')
         bit_stream += format(token_ints[1], '011b')
@@ -519,14 +536,14 @@ class OTPGenerator:
         # OTP servers MUST verify this checksum explicitly as part of the
         # operation of decoding this representation of the one-time password.
         if (
-                '{0:0>8b}'.format(OTPGenerator.bit_pair_sum(
-                    bit_stream[:64]))[-2:] != bit_stream[-2:]
+            f'{OTPGenerator.bit_pair_sum(bit_stream[:64]):0>8b}'[-2:]
+            != bit_stream[-2:]
         ):
             raise OTPGeneratorException('Invalid bit checksum')
         return int(bit_stream[:64], 2).to_bytes(8, 'big')
 
     @staticmethod
-    def validate_hash_algo(hash_algo):
+    def validate_hash_algo(hash_algo) -> str:
         """
         Validates the provided hash-algorithm.
 
@@ -541,19 +558,20 @@ class OTPGenerator:
         if isinstance(hash_algo, int):
             if hash_algo not in _ALGO_DICT:
                 raise OTPGeneratorException(
-                    'hash_algo is not among the known algorithms')
+                    'hash_algo is not among the known algorithms'
+                )
             hash_algo = _ALGO_DICT.get(hash_algo)
         if not isinstance(hash_algo, str):
-            raise OTPGeneratorException(
-                'hash_algo must be an int or a str')
+            raise OTPGeneratorException('hash_algo must be an int or a str')
         if hash_algo not in hashlib.algorithms_available:
             raise OTPGeneratorException(
                 f'{hash_algo} is not supported by this version of the '
-                'hashlib module')
+                'hashlib module'
+            )
         return hash_algo
 
     @staticmethod
-    def validate_seed(seed):
+    def validate_seed(seed: str) -> str:
         """
         Validates the provided seed as defined by RFC-2289.
 
@@ -569,15 +587,17 @@ class OTPGenerator:
             raise OTPGeneratorException('Seed must be a string')
         if not seed or len(seed) > 16:
             raise OTPGeneratorException(
-                'The seed MUST be of 1 to 16 characters in length')
+                'The seed MUST be of 1 to 16 characters in length'
+            )
         for char in seed:
             if char not in string.ascii_letters + string.digits:
                 raise OTPGeneratorException(
-                    'The seed MUST consist of purely alphanumeric characters')
+                    'The seed MUST consist of purely alphanumeric characters'
+                )
         return seed
 
     @staticmethod
-    def validate_step(step):
+    def validate_step(step: int) -> int:
         """
         Validates the provided step as defined by RFC-2289.
 
@@ -595,7 +615,7 @@ class OTPGenerator:
             raise OTPGeneratorException('Step value MUST be >= 0')
         return step
 
-    def generate_otp_hexdigest(self, step):
+    def generate_otp_hexdigest(self, step: int) -> str:
         """
         Generates the OTP hexdigest for the given step.
 
@@ -607,7 +627,7 @@ class OTPGenerator:
         """
         return '0x' + binascii.hexlify(self._generate_otp_bytes(step)).decode()
 
-    def generate_otp_hexdigest_from_challenge(self, challenge):
+    def generate_otp_hexdigest_from_challenge(self, challenge: str) -> str:
         """
         Same as generate_otp_hexdigest, but it generates hex. from a challenge.
 
@@ -628,7 +648,7 @@ class OTPGenerator:
         self._hash_algo = self.validate_hash_algo(hash_algo)
         return self.generate_otp_hexdigest(step)
 
-    def generate_otp_words(self, step):
+    def generate_otp_words(self, step: int) -> str:
         """
         Generates the OTP six words token for the given step.
 
@@ -640,7 +660,7 @@ class OTPGenerator:
         """
         return self.bytes_to_tokens(self._generate_otp_bytes(step))
 
-    def generate_otp_words_from_challenge(self, challenge):
+    def generate_otp_words_from_challenge(self, challenge: str) -> str:
         """
         Same as generate_otp_words, but it generates words from a challenge.
 
@@ -661,7 +681,7 @@ class OTPGenerator:
         self._hash_algo = self.validate_hash_algo(hash_algo)
         return self.generate_otp_words(step)
 
-    def hexdigest_range(self, start=499, stop=0):
+    def hexdigest_range(self, start: int = 499, stop: int = 0):
         """
         Returns an iterator that providing hexdigests corresponding to steps
         from `start` to and including `stop`.
@@ -679,11 +699,12 @@ class OTPGenerator:
             raise OTPGeneratorException('Step value MUST be an int')
         if start < stop:
             raise OTPGeneratorException(
-                'Start value can not be lower than stop')
+                'Start value can not be lower than stop'
+            )
         for step in range(start, stop - 1, -1):
             yield self.generate_otp_hexdigest(step)
 
-    def words_range(self, start=499, stop=0):
+    def words_range(self, start: int = 499, stop: int = 0):
         """
         Returns an iterator that providing the words corresponding to steps
         from `start` to and including `stop`.
@@ -701,11 +722,12 @@ class OTPGenerator:
             raise OTPGeneratorException('Step value MUST be an int')
         if start < stop:
             raise OTPGeneratorException(
-                'Start value can not be lower than stop')
+                'Start value can not be lower than stop'
+            )
         for step in range(start, stop - 1, -1):
             yield self.generate_otp_words(step)
 
-    def _generate_otp_bytes(self, step):
+    def _generate_otp_bytes(self, step: int) -> bytes:
         """
         Generates the OTP bytes for the given step.
 
@@ -733,6 +755,6 @@ class OTPGenerator:
                 digest = self.sha1_digest_folding(large_digest)
             else:
                 raise OTPGeneratorException(
-                    '{hash_algo} is not supported by this module'.format(
-                        hash_algo=self._hash_algo))
+                    f'{self._hash_algo} is not supported by this module'
+                )
         return digest

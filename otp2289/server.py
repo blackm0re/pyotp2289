@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 #
-# Copyright (c) 2020, Simeon Simeonov
+# Copyright (c) 2020-2022 Simeon Simeonov
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,9 +27,7 @@
 import binascii
 import hashlib
 
-from .generator import (OTP_ALGO_MD5,
-                        OTPGenerator,
-                        OTPGeneratorException)
+from .generator import OTP_ALGO_MD5, OTPGenerator, OTPGeneratorException
 
 
 class OTPStateException(Exception):
@@ -53,7 +51,13 @@ class OTPState:
     - validate the corresponding generated response from the generator
     """
 
-    def __init__(self, ot_hex, current_step, seed, hash_algo=OTP_ALGO_MD5):
+    def __init__(
+        self,
+        ot_hex: str,
+        current_step: int,
+        seed: str,
+        hash_algo=OTP_ALGO_MD5,
+    ):
         """
         Constructs an OTPState object with the given arguments.
 
@@ -87,45 +91,47 @@ class OTPState:
 
     def __repr__(self):
         """repr implementation"""
-        return (f'{self.__class__} at {id(self)} '
-                f'(ot_hex={self._current_digest}, current_step={self._step}, '
-                f'seed={self._seed}, '
-                f'hash_algo={self._hash_algo})')
+        return (
+            f'{self.__class__} at {id(self)} '
+            f'(ot_hex={self._current_digest}, current_step={self._step}, '
+            f'seed={self._seed}, '
+            f'hash_algo={self._hash_algo})'
+        )
 
     @property
-    def challenge_string(self):
+    def challenge_string(self) -> str:
         """challenge_string-property"""
         # RFC-2289: "...the entire challenge string MUST be
         # terminated with either a space or a new line."
         return f'otp-{self._hash_algo} {self._step} {self._seed} '
 
     @property
-    def current_digest(self):
+    def current_digest(self) -> bytes:
         """current_digest-property"""
         return self._current_digest
 
     @property
-    def hash_algo(self):
+    def hash_algo(self) -> str:
         """hash_algo-property"""
         return self._hash_algo
 
     @property
-    def seed(self):
+    def seed(self) -> str:
         """seed-property"""
         return self._seed
 
     @property
-    def step(self):
+    def step(self) -> int:
         """step-property"""
         return self._step
 
     @property
-    def validated(self):
+    def validated(self) -> bool:
         """validated-property"""
         return bool(self._new_digest_hex)
 
     @classmethod
-    def from_dict(cls, dict_obj):
+    def from_dict(cls, dict_obj: dict):
         """
         Returns an OTPState object from the dict-object
 
@@ -138,7 +144,7 @@ class OTPState:
         return cls(**dict_obj)
 
     @staticmethod
-    def response_to_bytes(response):
+    def response_to_bytes(response: str) -> bytes:
         """
         A wrapper that handles/validates the response as specified by RFC-2289.
 
@@ -166,10 +172,11 @@ class OTPState:
                 return OTPState.validate_hex(response)
             except OTPStateException:
                 raise OTPInvalidResponse(
-                    'The response is neither a valid token or hex') from None
+                    'The response is neither a valid token or hex'
+                ) from None
 
     @staticmethod
-    def validate_hex(ot_hex):
+    def validate_hex(ot_hex: str) -> bytes:
         """
         Validates the provided hexidigest.
 
@@ -187,8 +194,10 @@ class OTPState:
             ot_hex = ot_hex[2:]
             ot_hex = ot_hex.strip().lower()
         if len(ot_hex) != 16:
-            raise OTPStateException('The length of the hex should be 16 '
-                                    '(representing 64 bits digest)')
+            raise OTPStateException(
+                'The length of the hex should be 16 '
+                '(representing 64 bits digest)'
+            )
         try:
             return binascii.unhexlify(ot_hex)
         except binascii.Error:
@@ -206,12 +215,18 @@ class OTPState:
         """
         if self._new_digest_hex is None:
             return None
-        return OTPState(self._new_digest_hex,
-                        self._step - 1,
-                        self._seed,
-                        self._hash_algo)
+        return OTPState(
+            self._new_digest_hex,
+            self._step - 1,
+            self._seed,
+            self._hash_algo,
+        )
 
-    def response_validates(self, response, store_valid_response=True):
+    def response_validates(
+        self,
+        response: str,
+        store_valid_response: str = True,
+    ) -> bool:
         """
         Validates the incoming response as specified by RFC-2289.
 
@@ -233,32 +248,35 @@ class OTPState:
         if self._hash_algo == 'md5':
             digest = hashlib.md5(response_bytes).digest()
             if (
-                    self._current_digest is None or
-                    OTPGenerator.strxor(digest[0:8], digest[8:]) ==
-                    self._current_digest
+                self._current_digest is None
+                or OTPGenerator.strxor(digest[0:8], digest[8:])
+                == self._current_digest
             ):
                 if store_valid_response:
                     self._new_digest_hex = binascii.hexlify(
-                        response_bytes).decode()
+                        response_bytes
+                    ).decode()
                 return True
             return False
         if self._hash_algo == 'sha1':
             digest = hashlib.sha1(response_bytes).digest()
             if (
-                    self._current_digest is None or
-                    OTPGenerator.sha1_digest_folding(
-                        hashlib.sha1(
-                            response_bytes).digest()) == self._current_digest
+                self._current_digest is None
+                or OTPGenerator.sha1_digest_folding(
+                    hashlib.sha1(response_bytes).digest()
+                )
+                == self._current_digest
             ):
                 if store_valid_response:
                     self._new_digest_hex = binascii.hexlify(
-                        response_bytes).decode()
+                        response_bytes
+                    ).decode()
                 return True
             return False
         # this should not happen since the hash_algo is validated by the caller
         raise OTPInvalidResponse(f'Ivalid hash_algo: {self._hash_algo}')
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """
         Returns a dict representation of the object.
 
@@ -270,10 +288,12 @@ class OTPState:
         ot_hex = self._current_digest
         if ot_hex is not None:
             ot_hex = binascii.hexlify(self._current_digest).decode()
-        return {'ot_hex': ot_hex,
-                'current_step': self._step,
-                'seed': self._seed,
-                'hash_algo': self._hash_algo}
+        return {
+            'ot_hex': ot_hex,
+            'current_step': self._step,
+            'seed': self._seed,
+            'hash_algo': self._hash_algo,
+        }
 
 
 class OTPStore:
@@ -285,6 +305,7 @@ class OTPStore:
 
     The class could serve as a base class when implementing store backends.
     """
+
     def __init__(self, data=None):
         """
         Constructs an OTPStore object from data
@@ -310,7 +331,7 @@ class OTPStore:
         return len(self._data)
 
     @property
-    def data(self):
+    def data(self) -> dict:
         """
         data-property
 
@@ -320,7 +341,7 @@ class OTPStore:
         return self._data
 
     @property
-    def states(self):
+    def states(self) -> dict:
         """
         states-property
 
@@ -329,7 +350,7 @@ class OTPStore:
         """
         return self._states
 
-    def add_state(self, key, state):
+    def add_state(self, key: str, state: OTPState):
         """
         Adds an OTPState object with a given key.
 
@@ -356,7 +377,7 @@ class OTPStore:
         """A wrapper for dict.items"""
         return self._data.items()
 
-    def pop_state(self, key):
+    def pop_state(self, key: str) -> OTPState:
         """
         Removes specified key and returns the corresponding OTPState-object.
 
@@ -376,7 +397,12 @@ class OTPStore:
         self._states.pop(state)
         return state
 
-    def response_validates(self, key, response, store_valid_response=True):
+    def response_validates(
+        self,
+        key: str,
+        response: str,
+        store_valid_response: bool = True,
+    ) -> bool:
         """
         A method that wraps around OTPState.response_validates and
         OTPState.get_next_state.
@@ -411,7 +437,7 @@ class OTPStore:
             self._states.pop(state)
         return rvalue
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """
         Returns a dict representation of the object.
 
@@ -422,7 +448,7 @@ class OTPStore:
         """
         return {key: state.to_dict() for key, state in self._data.items()}
 
-    def _add_data(self, dict_obj):
+    def _add_data(self, dict_obj: dict) -> dict:
         """
         Adds data from a dict object (dict_obj).
 

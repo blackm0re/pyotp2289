@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 #
-# Copyright (c) 2020, Simeon Simeonov
+# Copyright (c) 2020-2022 Simeon Simeonov
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@ python -m otp2289 --generate-otp-response -s TesT -i 499 -f token
 import argparse
 import errno
 import getpass
+import io
 import os
 import secrets
 import string
@@ -48,7 +49,7 @@ def eprint(*arg, **kwargs):
     print(*arg, file=sys.stderr, flush=True, **kwargs)
 
 
-def generate_otp_response(args):
+def generate_otp_response(args: argparse.Namespace) -> str:
     """
     Generates a response based on the parameters sent from the parser
 
@@ -65,24 +66,29 @@ def generate_otp_response(args):
     generator = otp2289.generator.OTPGenerator(
         args.password.encode(),
         args.seed,
-        args.hash_algo)
+        args.hash_algo,
+    )
     if args.challenge_string:
         if args.output_format == 'token':
             return generator.generate_otp_words_from_challenge(
-                args.challenge_string)
+                args.challenge_string
+            )
         return generator.generate_otp_hexdigest_from_challenge(
-            args.challenge_string)
+            args.challenge_string
+        )
     # regular parameters
     header = ''
     if not args.quiet:
-        header = (f'Seed: {args.seed}, Step: {args.step}, '
-                  f'Hash: {args.hash_algo}{os.linesep}')
+        header = (
+            f'Seed: {args.seed}, Step: {args.step}, '
+            f'Hash: {args.hash_algo}{os.linesep}'
+        )
     if args.output_format == 'token':
         return header + generator.generate_otp_words(args.step)
     return header + generator.generate_otp_hexdigest(args.step)
 
 
-def generate_otp_range(args):
+def generate_otp_range(args: argparse.Namespace) -> str:
     """
     Generates range of responses based on the parameters sent from the parser
 
@@ -99,7 +105,8 @@ def generate_otp_range(args):
     generator = otp2289.generator.OTPGenerator(
         args.password.encode(),
         args.seed,
-        args.hash_algo)
+        args.hash_algo,
+    )
     if args.output_format == 'token':
         method = generator.generate_otp_words
     else:
@@ -112,25 +119,35 @@ def generate_otp_range(args):
     # any need for quiet?
     header = ''
     if not args.quiet:
-        header = (f'Seed: {args.seed}, Step: {args.step}, '
-                  f'Hash: {args.hash_algo}, Range: {args.range}{os.linesep}')
+        header = (
+            f'Seed: {args.seed}, Step: {args.step}, '
+            f'Hash: {args.hash_algo}, Range: {args.range}{os.linesep}'
+        )
     return header + os.linesep.join(
-        [f'{step}: ' + method(step) for step in range(
-            args.step, args.step - args.range, -1)])
+        [
+            f'{step}: ' + method(step)
+            for step in range(
+                args.step,
+                args.step - args.range,
+                -1,
+            )
+        ]
+    )
 
 
-def get_rnd_seed():
+def get_rnd_seed() -> str:
     """
     Returns a random seed in the format:
 
     2 random letters (capitalize()) + 5 random digits
     """
     rnd = secrets.SystemRandom()
-    return (''.join(rnd.choices(string.ascii_lowercase, k=2)).capitalize() +
-            ''.join(rnd.choices(string.digits, k=5)))
+    return ''.join(
+        rnd.choices(string.ascii_lowercase, k=2)
+    ).capitalize() + ''.join(rnd.choices(string.digits, k=5))
 
 
-def initiate_new_sequence(args):
+def initiate_new_sequence(args: argparse.Namespace) -> str:
     """
     Generates a new sequence based on the parameters sent from the parser.
 
@@ -148,15 +165,19 @@ def initiate_new_sequence(args):
         args.seed = get_rnd_seed()
     header = ''
     if not args.quiet:
-        header = (f'Seed: {args.seed}, Step: {args.step}, '
-                  f'Hash: {args.hash_algo}{os.linesep}')
+        header = (
+            f'Seed: {args.seed}, Step: {args.step}, '
+            f'Hash: {args.hash_algo}{os.linesep}'
+        )
     generator = otp2289.generator.OTPGenerator(
         args.password.encode(),
         args.seed,
-        args.hash_algo)
+        args.hash_algo,
+    )
     if args.challenge_string:
         return header + generator.generate_otp_hexdigest_from_challenge(
-            args.challenge_string)
+            args.challenge_string
+        )
     return header + generator.generate_otp_hexdigest(args.step)
 
 
@@ -164,92 +185,122 @@ def main(args=None):
     """the main entry point"""
     parser = argparse.ArgumentParser(
         prog=__package__,
-        epilog=(f'%(prog)s {otp2289.__version__} by Simeon Simeonov '
-                '(sgs @ LiberaChat)'),
-        description='The following options are available')
+        epilog=(
+            f'%(prog)s {otp2289.__version__} by Simeon Simeonov '
+            '(sgs @ LiberaChat)'
+        ),
+        description='The following options are available',
+    )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         '--generate-otp-range',
         action='store_true',
         dest='generate_otp_range',
         default=False,
-        help='Generates a range of OTP responses')
+        help='Generates a range of OTP responses',
+    )
     group.add_argument(
         '--generate-otp-response',
         action='store_true',
         dest='generate_otp_response',
         default=False,
-        help='Generates a new OTP response')
+        help='Generates a new OTP response',
+    )
     group.add_argument(
         '--initiate-new-sequence',
         action='store_true',
         dest='initiate_new_sequence',
         default=False,
-        help=('Initiates a new OTP sequence. Essentially the same as '
-              '--generate-otp-response only it prompts twice for password '
-              'and always outputs hex (ignores -f).'))
+        help=(
+            'Initiates a new OTP sequence. Essentially the same as '
+            '--generate-otp-response only it prompts twice for password '
+            'and always outputs hex (ignores -f).'
+        ),
+    )
     parser.add_argument(
-        '-a', '--hash-algorithm',
+        '-a',
+        '--hash-algorithm',
         metavar='<md5 | sha1>',
         type=str,
         dest='hash_algo',
         default='md5',
-        help='The hash algorithm to use. Possible values: md5 (default), sha1')
+        help='The hash algorithm to use. Possible values: md5 (default), sha1',
+    )
     parser.add_argument(
-        '-c', '--challenge-string',
+        '-c',
+        '--challenge-string',
         metavar='<challenge string>',
         type=str,
         dest='challenge_string',
         default='',
-        help='Use challenge string when generating response')
+        help='Use challenge string when generating response',
+    )
     parser.add_argument(
-        '-f', '--output-format',
+        '-f',
+        '--output-format',
         metavar='<hex | token>',
         type=str,
         dest='output_format',
         default='hex',
-        help='The output format to use. Possible values: hex (default), token')
+        help='The output format to use. Possible values: hex (default), token',
+    )
     parser.add_argument(
-        '-i', '--step',
+        '-i',
+        '--step',
         metavar='<step>',
         type=int,
         dest='step',
         default=500,
-        help='The step. Default for initiating a new sequence is: 500')
+        help='The step. Default for initiating a new sequence is: 500',
+    )
     parser.add_argument(
-        '-p', '--password',
+        '-p',
+        '--password',
         metavar='<PASSWORD[FILE]>',
         type=str,
         dest='password',
         default='',
-        help=('The password or path to password file '
-              '(default & recommended: prompt for passwd)'))
+        help=(
+            'The password or path to password file '
+            '(default & recommended: prompt for passwd)'
+        ),
+    )
     parser.add_argument(
-        '-q', '--quiet',
+        '-q',
+        '--quiet',
         action='store_true',
         dest='quiet',
         default=False,
-        help='Dot not show headers. Only hex / tokens')
+        help='Dot not show headers. Only hex / tokens',
+    )
     parser.add_argument(
-        '-r', '--range',
+        '-r',
+        '--range',
         metavar='<range>',
         type=int,
         dest='range',
         default=1,
-        help='Amount of consecutive OTP hex/tokens to generate. default: 1')
+        help='Amount of consecutive OTP hex/tokens to generate. default: 1',
+    )
     parser.add_argument(
-        '-s', '--seed',
+        '-s',
+        '--seed',
         metavar='[seed]',
         type=str,
         dest='seed',
         default='',
-        help=('The seed to use (1 to 16 alphanumeric characters) '
-              '(default & recommended: random seed)'))
+        help=(
+            'The seed to use (1 to 16 alphanumeric characters) '
+            '(default & recommended: random seed)'
+        ),
+    )
     parser.add_argument(
-        '-v', '--version',
+        '-v',
+        '--version',
         action='version',
         version=f'%(prog)s {otp2289.__version__}',
-        help='display program-version and exit')
+        help='display program-version and exit',
+    )
     args = parser.parse_args(args)
     # handle the password before everything else
     if not args.password:
@@ -257,8 +308,8 @@ def main(args=None):
             while True:
                 args.password = getpass.getpass()
                 if (
-                        not args.initiate_new_sequence or
-                        args.password == getpass.getpass('Repeat password: ')
+                    not args.initiate_new_sequence
+                    or args.password == getpass.getpass('Repeat password: ')
                 ):
                     break
                 eprint('The passwords do not match')
@@ -267,7 +318,7 @@ def main(args=None):
             sys.exit(errno.EACCES)
     elif os.path.isfile(args.password):
         try:
-            with open(args.password, 'r') as fp:
+            with io.open(args.password, 'r', encoding='utf-8') as fp:
                 args.password = fp.readline().strip()
         except Exception as exp:
             eprint(f'Unable to open password file: {exp}')

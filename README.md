@@ -1,6 +1,6 @@
 # pyotp2289
 
-pyotp2289 is a pure Python 3 implementation of "A One-Time Password System" -
+*pyotp2289* is a pure Python 3 implementation of "A One-Time Password System" -
 RFC-2289.
 
 It requires no additional libraries.
@@ -30,7 +30,7 @@ I hope that somebody will find it useful.
 
 ### FreeBSD
 
-`pyotp2289` is included in the official ports-tree.
+*pyotp2289* is included in the official ports-tree.
 
    ```bash
    cd /usr/ports/security/py-pyotp2289
@@ -41,21 +41,13 @@ I hope that somebody will find it useful.
 ### Gentoo
 
    ```bash
+   # add sgs' custom repository using app-eselect/eselect-repository
+   eselect repository add sgs
+
+   # ... or using app-portage/layman (obsolete)
    layman -a sgs
+
    emerge dev-python/pyotp2289
-   ```
-
-
-### Fedora ( >= 31)
-
-Set up a custom repo as described: https://pkg.pichove.org/Fedora/README.txt
-
-Key fingerprint: A664 5797 661E 2F47 3DD3  FF06 BCE7 0555 C3BB 08F7
-
-Install the package:
-
-   ```bash
-   sudo dnf install python3-pyotp2289
    ```
 
 
@@ -189,7 +181,7 @@ a complete reference.
 
 If you don't care about developing applications in Python and only care about
 generating one-time passwords (tokens / hex digests) and authenticating with
-existing solutions (f.i. FreeBSD servers), pyotp2289 comes with a simple CLI:
+existing solutions (f.i. FreeBSD servers), *pyotp2289* comes with a simple CLI:
 
    ```bash
    python -m otp2289 --generate-otp-response -f token -i 498 -s TesT
@@ -207,7 +199,7 @@ starting from (and including) 498.
 
 ## Support and contributing
 
-pyotp2289 is hosted on GitHub: https://github.com/blackm0re/pyotp2289
+*pyotp2289* is hosted on GitHub: https://github.com/blackm0re/pyotp2289
 
 
 ## Author
@@ -217,7 +209,7 @@ Simeon Simeonov - sgs @ LiberaChat
 
 ## [License](https://github.com/blackm0re/pyotp2289/blob/master/LICENSE)
 
-Copyright (c) 2020, Simeon Simeonov
+Copyright (c) 2020-2022 Simeon Simeonov
 All rights reserved.
 
 [Licensed](https://github.com/blackm0re/pyotp2289/blob/master/LICENSE) under the BSD 2-clause.
