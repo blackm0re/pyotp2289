@@ -135,6 +135,48 @@ def generate_otp_range(args: argparse.Namespace) -> str:
     )
 
 
+def get_password(args: argparse.Namespace) -> str:
+    """
+    Extract the provided password using the defined argparse arguments
+
+    :param args: The arguments assigned from argparse
+    :type args: argparse.Namespace
+
+    :raises KeyboardInterrupt: If the password prompt is interrupted
+
+    :return: The extrated password string
+    :rtype: str
+    """
+    if args.force_password_prompt:
+        while True:
+            password = getpass.getpass()
+            if not args.initiate_new_sequence or password == getpass.getpass(
+                'Repeat password: '
+            ):
+                break
+            eprint('The passwords do not match')
+        return password
+
+    if not args.password:
+        password = os.environ.get('OTP2289_PASSWORD')
+        if password is not None:
+            return password
+        while True:
+            password = getpass.getpass()
+            if not args.initiate_new_sequence or password == getpass.getpass(
+                'Repeat password: '
+            ):
+                break
+            eprint('The passwords do not match')
+        return password
+
+    if os.path.isfile(args.password):
+        with io.open(args.password, 'r', encoding='utf-8') as fp:
+            return fp.readline().strip()
+
+    return args.password
+
+
 def get_rnd_seed() -> str:
     """
     Returns a random seed in the format:
@@ -192,6 +234,7 @@ def main(args=None):
         description='The following options are available',
     )
     group = parser.add_mutually_exclusive_group(required=True)
+    password_group = parser.add_mutually_exclusive_group()
     group.add_argument(
         '--generate-otp-range',
         action='store_true',
@@ -215,6 +258,28 @@ def main(args=None):
             'Initiates a new OTP sequence. Essentially the same as '
             '--generate-otp-response only it prompts twice for password '
             'and always outputs hex (ignores -f).'
+        ),
+    )
+    password_group.add_argument(
+        '-P',
+        '--force-password-prompt',
+        dest='force_password_prompt',
+        action='store_true',
+        help=(
+            'Force password prompt even if the env. variable '
+            '"OTP2289_PASSWORD" is set'
+        ),
+    )
+    password_group.add_argument(
+        '-p',
+        '--password',
+        metavar='<PASSWORD[FILE]>',
+        type=str,
+        dest='password',
+        default='',
+        help=(
+            'The password or path to password file '
+            '(default & recommended: prompt for passwd)'
         ),
     )
     parser.add_argument(
@@ -254,18 +319,6 @@ def main(args=None):
         help='The step. Default for initiating a new sequence is: 500',
     )
     parser.add_argument(
-        '-p',
-        '--password',
-        metavar='<PASSWORD[FILE]>',
-        type=str,
-        dest='password',
-        default='',
-        help=(
-            'The password or path to password file '
-            '(default & recommended: prompt for passwd)'
-        ),
-    )
-    parser.add_argument(
         '-q',
         '--quiet',
         action='store_true',
@@ -303,26 +356,14 @@ def main(args=None):
     )
     args = parser.parse_args(args)
     # handle the password before everything else
-    if not args.password:
-        try:
-            while True:
-                args.password = getpass.getpass()
-                if (
-                    not args.initiate_new_sequence
-                    or args.password == getpass.getpass('Repeat password: ')
-                ):
-                    break
-                eprint('The passwords do not match')
-        except KeyboardInterrupt:
-            eprint(os.linesep + 'Prompt terminated')
-            sys.exit(errno.EACCES)
-    elif os.path.isfile(args.password):
-        try:
-            with io.open(args.password, 'r', encoding='utf-8') as fp:
-                args.password = fp.readline().strip()
-        except Exception as exp:
-            eprint(f'Unable to open password file: {exp}')
-            sys.exit(1)
+    try:
+        args.password = get_password(args)
+    except KeyboardInterrupt:
+        eprint(os.linesep + 'Prompt terminated')
+        sys.exit(errno.EACCES)
+    except Exception as exp:
+        eprint(f'Unable to fetch password: {exp}')
+        sys.exit(1)
     try:
         if args.initiate_new_sequence:
             print(initiate_new_sequence(args))

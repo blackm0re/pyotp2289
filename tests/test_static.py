@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 #
-# Copyright (c) 2020, Simeon Simeonov
+# Copyright (c) 2020-2022, Simeon Simeonov
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,42 +33,59 @@ import otp2289
 def test_bytes_and_tokens():
     """Tests the official hex and tokens defined in RFC2289"""
     assert binascii.unhexlify('9e876134d90499dd') == (
-        otp2289.OTPGenerator.tokens_to_bytes('INCH SEA ANNE LONG AHEM TOUR'))
+        otp2289.OTPGenerator.tokens_to_bytes('INCH SEA ANNE LONG AHEM TOUR')
+    )
     assert binascii.unhexlify('7965e05436f5029f') == (
-        otp2289.OTPGenerator.tokens_to_bytes('EASE OIL FUM CURE AWRY AVIS'))
+        otp2289.OTPGenerator.tokens_to_bytes('EASE OIL FUM CURE AWRY AVIS')
+    )
     assert binascii.unhexlify('50fe1962c4965880') == (
-        otp2289.OTPGenerator.tokens_to_bytes('BAIL TUFT BITS GANG CHEF THY'))
+        otp2289.OTPGenerator.tokens_to_bytes('BAIL TUFT BITS GANG CHEF THY')
+    )
     assert binascii.unhexlify('87066dd9644bf206') == (
-        otp2289.OTPGenerator.tokens_to_bytes('FULL PEW DOWN ONCE MORT ARC'))
+        otp2289.OTPGenerator.tokens_to_bytes('FULL PEW DOWN ONCE MORT ARC')
+    )
     assert binascii.unhexlify('7cd34c1040add14b') == (
-        otp2289.OTPGenerator.tokens_to_bytes('FACT HOOF AT FIST SITE KENT'))
+        otp2289.OTPGenerator.tokens_to_bytes('FACT HOOF AT FIST SITE KENT')
+    )
     assert binascii.unhexlify('5aa37a81f212146c') == (
-        otp2289.OTPGenerator.tokens_to_bytes('BODE HOP JAKE STOW JUT RAP'))
+        otp2289.OTPGenerator.tokens_to_bytes('BODE HOP JAKE STOW JUT RAP')
+    )
     assert binascii.unhexlify('f205753943de4cf9') == (
-        otp2289.OTPGenerator.tokens_to_bytes('ULAN NEW ARMY FUSE SUIT EYED'))
+        otp2289.OTPGenerator.tokens_to_bytes('ULAN NEW ARMY FUSE SUIT EYED')
+    )
     assert binascii.unhexlify('ddcdac956f234937') == (
-        otp2289.OTPGenerator.tokens_to_bytes('SKIM CULT LOB SLAM POE HOWL'))
+        otp2289.OTPGenerator.tokens_to_bytes('SKIM CULT LOB SLAM POE HOWL')
+    )
     assert binascii.unhexlify('b203e28fa525be47') == (
-        otp2289.OTPGenerator.tokens_to_bytes('LONG IVY JULY AJAR BOND LEE'))
-
+        otp2289.OTPGenerator.tokens_to_bytes('LONG IVY JULY AJAR BOND LEE')
+    )
     assert binascii.unhexlify('bb9e6ae1979d8ff4') == (
-        otp2289.OTPGenerator.tokens_to_bytes('MILT VARY MAST OK SEES WENT'))
+        otp2289.OTPGenerator.tokens_to_bytes('MILT VARY MAST OK SEES WENT')
+    )
     assert binascii.unhexlify('63d936639734385b') == (
-        otp2289.OTPGenerator.tokens_to_bytes('CART OTTO HIVE ODE VAT NUT'))
+        otp2289.OTPGenerator.tokens_to_bytes('CART OTTO HIVE ODE VAT NUT')
+    )
     assert binascii.unhexlify('87fec7768b73ccf9') == (
-        otp2289.OTPGenerator.tokens_to_bytes('GAFF WAIT SKID GIG SKY EYED'))
+        otp2289.OTPGenerator.tokens_to_bytes('GAFF WAIT SKID GIG SKY EYED')
+    )
     assert binascii.unhexlify('ad85f658ebe383c9') == (
-        otp2289.OTPGenerator.tokens_to_bytes('LEST OR HEEL SCOT ROB SUIT'))
+        otp2289.OTPGenerator.tokens_to_bytes('LEST OR HEEL SCOT ROB SUIT')
+    )
     assert binascii.unhexlify('d07ce229b5cf119b') == (
-        otp2289.OTPGenerator.tokens_to_bytes('RITE TAKE GELD COST TUNE RECK'))
+        otp2289.OTPGenerator.tokens_to_bytes('RITE TAKE GELD COST TUNE RECK')
+    )
     assert binascii.unhexlify('27bc71035aaf3dc6') == (
-        otp2289.OTPGenerator.tokens_to_bytes('MAY STAR TIN LYON VEDA STAN'))
+        otp2289.OTPGenerator.tokens_to_bytes('MAY STAR TIN LYON VEDA STAN')
+    )
     assert binascii.unhexlify('d51f3e99bf8e6f0b') == (
-        otp2289.OTPGenerator.tokens_to_bytes('RUST WELT KICK FELL TAIL FRAU'))
+        otp2289.OTPGenerator.tokens_to_bytes('RUST WELT KICK FELL TAIL FRAU')
+    )
     assert binascii.unhexlify('82aeb52d943774e4') == (
-        otp2289.OTPGenerator.tokens_to_bytes('FLIT DOSE ALSO MEW DRUM DEFY'))
+        otp2289.OTPGenerator.tokens_to_bytes('FLIT DOSE ALSO MEW DRUM DEFY')
+    )
     assert binascii.unhexlify('4f296a74fe1567ec') == (
-        otp2289.OTPGenerator.tokens_to_bytes('AURA ALOE HURL WING BERG WAIT'))
+        otp2289.OTPGenerator.tokens_to_bytes('AURA ALOE HURL WING BERG WAIT')
+    )
 
 
 def test_random_bytes():

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 #
-# Copyright (c) 2020, Simeon Simeonov
+# Copyright (c) 2020-2022, Simeon Simeonov
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,9 +31,11 @@ import otp2289
 
 def test_caller_exceptions():
     """Tests the exceptions when calling an initialized object"""
-    gen = otp2289.OTPGenerator('This is a test.'.encode(),
-                               'TeSt',
-                               otp2289.OTP_ALGO_MD5)
+    gen = otp2289.OTPGenerator(
+        'This is a test.'.encode(),
+        'TeSt',
+        otp2289.OTP_ALGO_MD5,
+    )
     with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
         gen.generate_otp_words('3')
     assert exc_info.type is otp2289.OTPGeneratorException
@@ -62,50 +64,72 @@ def test_constructor_exceptions():
     """
     # test the otp2289.OTPGenerator __init__ and validators
     with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
-        otp2289.OTPGenerator('This is a test.'.encode(),
-                             'TeStø'.encode(),
-                             otp2289.OTP_ALGO_MD5)
+        otp2289.OTPGenerator(
+            'This is a test.'.encode(),
+            'TeStø'.encode(),
+            otp2289.OTP_ALGO_MD5,
+        )
     assert exc_info.type is otp2289.OTPGeneratorException
     assert exc_info.value.args[0] == 'Seed must be a string'
     with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
-        otp2289.OTPGenerator('This is a test.'.encode(),
-                             'TeStøtEsTteSTteStTest',
-                             otp2289.OTP_ALGO_SHA1)
-    assert exc_info.type is otp2289.OTPGeneratorException
-    assert exc_info.value.args[0] == ('The seed MUST be of 1 to 16 '
-                                      'characters in length')
-    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
-        otp2289.OTPGenerator('This is a test.'.encode(),
-                             'TeStø',
-                             otp2289.OTP_ALGO_SHA1)
-    assert exc_info.type is otp2289.OTPGeneratorException
-    assert exc_info.value.args[0] == ('The seed MUST consist of purely '
-                                      'alphanumeric characters')
-    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
-        otp2289.OTPGenerator('This is a test.'.encode(), 'TeSt', 9)
+        otp2289.OTPGenerator(
+            'This is a test.'.encode(),
+            'TeStøtEsTteSTteStTest',
+            otp2289.OTP_ALGO_SHA1,
+        )
     assert exc_info.type is otp2289.OTPGeneratorException
     assert exc_info.value.args[0] == (
-        'hash_algo is not among the known algorithms')
+        'The seed MUST be of 1 to 16 characters in length'
+    )
     with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
-        otp2289.OTPGenerator('This is a test.'.encode(), 'TeSt', b'md5')
+        otp2289.OTPGenerator(
+            'This is a test.'.encode(),
+            'TeStø',
+            otp2289.OTP_ALGO_SHA1,
+        )
+    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.value.args[0] == (
+        'The seed MUST consist of purely alphanumeric characters'
+    )
+    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+        otp2289.OTPGenerator(
+            'This is a test.'.encode(),
+            'TeSt',
+            9,
+        )
+    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.value.args[0] == (
+        'hash_algo is not among the known algorithms'
+    )
+    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+        otp2289.OTPGenerator(
+            'This is a test.'.encode(),
+            'TeSt',
+            b'md5',
+        )
     assert exc_info.type is otp2289.OTPGeneratorException
     assert exc_info.value.args[0] == 'hash_algo must be an int or a str'
     # test the package structure as well
     with pytest.raises(otp2289.generator.OTPGeneratorException) as exc_info:
-        otp2289.generator.OTPGenerator('This is a test.'.encode(),
-                                       'TeSt',
-                                       'foo')
+        otp2289.generator.OTPGenerator(
+            'This is a test.'.encode(),
+            'TeSt',
+            'foo',
+        )
     assert exc_info.type is otp2289.generator.OTPGeneratorException
-    assert exc_info.value.args[0] == ('foo is not supported by this version '
-                                      'of the hashlib module')
+    assert exc_info.value.args[0] == (
+        'foo is not supported by this version of the hashlib module'
+    )
     with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
         otp2289.OTPGenerator('1234567', 'TeSt', otp2289.OTP_ALGO_MD5)
     assert exc_info.type is otp2289.OTPGeneratorException
     assert exc_info.value.args[0] == 'Password must be a byte-string'
     with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
-        otp2289.OTPGenerator('1234567'.encode(),
-                             'TeSt',
-                             otp2289.OTP_ALGO_MD5)
+        otp2289.OTPGenerator(
+            '1234567'.encode(),
+            'TeSt',
+            otp2289.OTP_ALGO_MD5,
+        )
     assert exc_info.type is otp2289.OTPGeneratorException
     assert exc_info.value.args[0] == 'Password must be longer than 10 bytes'
 
@@ -118,9 +142,11 @@ def test_md5():
     """
     # We could run this in a loop, but I guess "Readability counts."
     # pass='This is a test.', seed='TeSt'
-    gen = otp2289.OTPGenerator('This is a test.'.encode(),
-                               'TeSt',
-                               otp2289.OTP_ALGO_MD5)
+    gen = otp2289.OTPGenerator(
+        'This is a test.'.encode(),
+        'TeSt',
+        otp2289.OTP_ALGO_MD5,
+    )
     res_words = gen.generate_otp_words(0)
     res_hex = gen.generate_otp_hexdigest(0)
     assert isinstance(res_words, str)
@@ -131,16 +157,20 @@ def test_md5():
     assert gen.generate_otp_hexdigest(1) == '0x7965e05436f5029f'
     assert gen.generate_otp_words(1) == 'EASE OIL FUM CURE AWRY AVIS'
     assert gen.generate_otp_hexdigest_from_challenge('otp-md5 1   TeSt') == (
-        '0x7965e05436f5029f')
+        '0x7965e05436f5029f'
+    )
     assert gen.generate_otp_words_from_challenge('otp-md5 1 TeSt') == (
-        'EASE OIL FUM CURE AWRY AVIS')
+        'EASE OIL FUM CURE AWRY AVIS'
+    )
     # step 99
     assert gen.generate_otp_hexdigest(99) == '0x50fe1962c4965880'
     assert gen.generate_otp_words(99) == 'BAIL TUFT BITS GANG CHEF THY'
     assert gen.generate_otp_hexdigest_from_challenge('otp-md5 99   TeSt') == (
-        '0x50fe1962c4965880')
+        '0x50fe1962c4965880'
+    )
     assert gen.generate_otp_words_from_challenge('otp-md5 99   TeSt') == (
-        'BAIL TUFT BITS GANG CHEF THY')
+        'BAIL TUFT BITS GANG CHEF THY'
+    )
     # iterator test
     hexdigests = list(gen.hexdigest_range(105))  # testing the range itself
     words = list(gen.words_range(99))
@@ -153,9 +183,11 @@ def test_md5():
     assert words[1] == 'EASE OIL FUM CURE AWRY AVIS'
     assert words[99] == 'BAIL TUFT BITS GANG CHEF THY'
     # pass='AbCdEfGhIjK', seed='alpha1'
-    gen = otp2289.OTPGenerator('AbCdEfGhIjK'.encode(),
-                               'alpha1',
-                               otp2289.OTP_ALGO_MD5)
+    gen = otp2289.OTPGenerator(
+        'AbCdEfGhIjK'.encode(),
+        'alpha1',
+        otp2289.OTP_ALGO_MD5,
+    )
     assert gen.generate_otp_hexdigest(0) == '0x87066dd9644bf206'
     assert gen.generate_otp_words(0) == 'FULL PEW DOWN ONCE MORT ARC'
     assert gen.generate_otp_hexdigest(1) == '0x7cd34c1040add14b'
@@ -163,9 +195,11 @@ def test_md5():
     assert gen.generate_otp_hexdigest(99) == '0x5aa37a81f212146c'
     assert gen.generate_otp_words(99) == 'BODE HOP JAKE STOW JUT RAP'
     # pass="OTP's are good", seed='correct'
-    gen = otp2289.OTPGenerator("OTP's are good".encode(),
-                               'correct',
-                               otp2289.OTP_ALGO_MD5)
+    gen = otp2289.OTPGenerator(
+        "OTP's are good".encode(),
+        'correct',
+        otp2289.OTP_ALGO_MD5,
+    )
     assert gen.generate_otp_hexdigest(0) == '0xf205753943de4cf9'
     assert gen.generate_otp_words(0) == 'ULAN NEW ARMY FUSE SUIT EYED'
     assert gen.generate_otp_hexdigest(1) == '0xddcdac956f234937'
@@ -181,9 +215,11 @@ def test_sha1():
     Those are the tests from 'RFC-2289 Appendix C - OTP Verification Examples'
     """
     # pass='This is a test.', seed='TeSt'
-    gen = otp2289.OTPGenerator('This is a test.'.encode(),
-                               'TeSt',
-                               otp2289.OTP_ALGO_SHA1)
+    gen = otp2289.OTPGenerator(
+        'This is a test.'.encode(),
+        'TeSt',
+        otp2289.OTP_ALGO_SHA1,
+    )
     # step=0
     res_hex = gen.generate_otp_hexdigest(0)
     res_words = gen.generate_otp_words(0)
@@ -194,15 +230,19 @@ def test_sha1():
     assert gen.generate_otp_hexdigest(1) == '0x63d936639734385b'
     assert gen.generate_otp_words(1) == 'CART OTTO HIVE ODE VAT NUT'
     assert gen.generate_otp_hexdigest_from_challenge('otp-sha1 1 TeSt') == (
-        '0x63d936639734385b')
+        '0x63d936639734385b'
+    )
     assert gen.generate_otp_words_from_challenge('otp-sha1 1 TeSt') == (
-        'CART OTTO HIVE ODE VAT NUT')
+        'CART OTTO HIVE ODE VAT NUT'
+    )
     assert gen.generate_otp_hexdigest(99) == '0x87fec7768b73ccf9'
     assert gen.generate_otp_words(99) == 'GAFF WAIT SKID GIG SKY EYED'
     assert gen.generate_otp_hexdigest_from_challenge('otp-sha1 99   TeSt') == (
-        '0x87fec7768b73ccf9')
+        '0x87fec7768b73ccf9'
+    )
     assert gen.generate_otp_words_from_challenge('otp-sha1 99  TeSt') == (
-        'GAFF WAIT SKID GIG SKY EYED')
+        'GAFF WAIT SKID GIG SKY EYED'
+    )
     # iterator test
     hexdigests = list(gen.hexdigest_range(105))
     words = list(gen.words_range(99))
@@ -215,9 +255,11 @@ def test_sha1():
     assert words[1] == 'CART OTTO HIVE ODE VAT NUT'
     assert words[99] == 'GAFF WAIT SKID GIG SKY EYED'
     # pass='AbCdEfGhIjK', seed='alpha1'
-    gen = otp2289.OTPGenerator('AbCdEfGhIjK'.encode(),
-                               'alpha1',
-                               otp2289.OTP_ALGO_SHA1)
+    gen = otp2289.OTPGenerator(
+        'AbCdEfGhIjK'.encode(),
+        'alpha1',
+        otp2289.OTP_ALGO_SHA1,
+    )
     assert gen.generate_otp_hexdigest(0) == '0xad85f658ebe383c9'
     assert gen.generate_otp_words(0) == 'LEST OR HEEL SCOT ROB SUIT'
     assert gen.generate_otp_hexdigest(1) == '0xd07ce229b5cf119b'
@@ -225,9 +267,11 @@ def test_sha1():
     assert gen.generate_otp_hexdigest(99) == '0x27bc71035aaf3dc6'
     assert gen.generate_otp_words(99) == 'MAY STAR TIN LYON VEDA STAN'
     # pass="OTP's are good", seed='correct'
-    gen = otp2289.OTPGenerator("OTP's are good".encode(),
-                               'correct',
-                               otp2289.OTP_ALGO_SHA1)
+    gen = otp2289.OTPGenerator(
+        "OTP's are good".encode(),
+        'correct',
+        otp2289.OTP_ALGO_SHA1,
+    )
     assert gen.generate_otp_hexdigest(0) == '0xd51f3e99bf8e6f0b'
     assert gen.generate_otp_words(0) == 'RUST WELT KICK FELL TAIL FRAU'
     assert gen.generate_otp_hexdigest(1) == '0x82aeb52d943774e4'
