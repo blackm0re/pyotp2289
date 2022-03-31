@@ -456,11 +456,16 @@ class OTPStore:
         in a child class.
 
         dict_obj has the following format:
-        {'key': {'ot_hex': val1,
-                 'current_step': val2,
-                 'seed': val3,
-                 'hash_algo': val4},
-         ...., ....}
+        {
+            'key': {
+                'ot_hex': val1,
+                'current_step': val2,
+                'seed': val3,
+                'hash_algo': val4
+            },
+            ...,
+            ...,
+        }
 
         :param dict_obj: The dict-object
         :type dict_obj: dict
