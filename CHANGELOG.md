@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.1](https://github.com/blackm0re/pyotp2289/tree/1.1.1) (2022-04-02)
+
+[Full Changelog](https://github.com/blackm0re/pyotp2289/compare/1.1.0...1.1.1)
+
+**Changes:**
+
+- Reintroduce setup.py for better campatibility
+
+
 ## [1.1.0](https://github.com/blackm0re/pyotp2289/tree/1.1.0) (2022-03-29)
 
 [Full Changelog](https://github.com/blackm0re/pyotp2289/compare/1.0.0...1.1.0)
