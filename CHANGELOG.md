@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.0](https://github.com/blackm0re/pyotp2289/tree/1.2.0) (2023-01-05)
+
+[Full Changelog](https://github.com/blackm0re/pyotp2289/compare/1.1.1...1.2.0)
+
+**Changes:**
+
+- Add the `OTPState.ot_hex` property
+
+
 ## [1.1.1](https://github.com/blackm0re/pyotp2289/tree/1.1.1) (2022-04-02)
 
 [Full Changelog](https://github.com/blackm0re/pyotp2289/compare/1.1.0...1.1.1)

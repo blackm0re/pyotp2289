@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 #
-# Copyright (c) 2020-2022, Simeon Simeonov
+# Copyright (c) 2020-2023, Simeon Simeonov
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -80,6 +80,7 @@ def test_state_validation_md5():
     assert state.validated is False
     assert state.response_validates('0x9e876134d90499dd') is True
     assert state.response_validates('INCH SEA ANNE LONG AHEM TOUR') is True
+    assert state.ot_hex == '7965e05436f5029f'
     assert state.validated is True
 
 
@@ -94,6 +95,7 @@ def test_state_validation_sha1():
     assert state.validated is False
     assert state.response_validates('0xbb9e6ae1979d8ff4') is True
     assert state.response_validates('MILT VARY MAST OK SEES WENT') is True
+    assert state.ot_hex == '63d936639734385b'
     assert state.validated is True
 
 

@@ -164,8 +164,8 @@ RFC-2289 consists of interactions between them.
    # otp2289.server.OTPInvalidResponse exception is raised.
 
    # once the state has successfully validated the corresponding response,
-   the state **must never be used again** and a state corresponding to the
-   "next" (498) step created.
+   # the state **must never be used again** and a state corresponding to the
+   # "next" (498) step created.
    state = state.get_next_state()
 
    # the next authentication attempt...
@@ -209,7 +209,7 @@ Simeon Simeonov - sgs @ LiberaChat
 
 ## [License](https://github.com/blackm0re/pyotp2289/blob/master/LICENSE)
 
-Copyright (c) 2020-2022 Simeon Simeonov
+Copyright (c) 2020-2023 Simeon Simeonov
 All rights reserved.
 
 [Licensed](https://github.com/blackm0re/pyotp2289/blob/master/LICENSE) under the BSD 2-clause.

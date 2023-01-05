@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 #
-# Copyright (c) 2020-2022 Simeon Simeonov
+# Copyright (c) 2020-2023 Simeon Simeonov
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -114,6 +114,13 @@ class OTPState:
     def hash_algo(self) -> str:
         """hash_algo-property"""
         return self._hash_algo
+
+    @property
+    def ot_hex(self) -> str:
+        """ot_hex-property"""
+        if self._current_digest is None:
+            return ''
+        return binascii.hexlify(self._current_digest).decode()
 
     @property
     def seed(self) -> str:

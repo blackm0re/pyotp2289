@@ -21,14 +21,14 @@
 # -- Project information -----------------------------------------------------
 
 project = 'pyotp2289'
-copyright = '2020-2022, Simeon Simeonov'
+copyright = '2020-2023, Simeon Simeonov'
 author = 'Simeon Simeonov'
 
 # The short X.Y version
-version = '1.1.0'
+version = '1.2.0'
 
 # The full version, including alpha/beta/rc tags
-release = '1.1.0'
+release = '1.2.0'
 
 
 # -- General configuration ---------------------------------------------------

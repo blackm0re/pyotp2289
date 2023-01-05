@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 #
-# Copyright (c) 2020-2022 Simeon Simeonov
+# Copyright (c) 2020-2023 Simeon Simeonov
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,7 @@ from .server import (
 )
 
 __author__ = 'Simeon Simeonov'
-__version__ = '1.1.1'
+__version__ = '1.2.0'
 __license__ = 'BSD 2-Clause'
 
 
