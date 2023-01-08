@@ -5,19 +5,17 @@ RFC-2289.
 
 It requires no additional libraries.
 
-
 ## General
 
 The main reason for writing this library was the need to login into my
-FreeBSD servers using the [opiepasswd](https://www.freebsd.org/cgi/man.cgi?query=opiepasswd&sektion=1&manpath=freebsd-release-ports)
-as described in [FreeBSD Handbook](https://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/one-time-passwords.html).
+FreeBSD servers using [opiepasswd(1)](https://www.freebsd.org/cgi/man.cgi?query=opiepasswd&sektion=1&manpath=FreeBSD)
+as [described in the FreeBSD Handbook](https://docs.freebsd.org/en/books/handbook/security/#one-time-passwords).
 
 I decided to license the library under the
 [Simplified BSD License / 2-clause BSD license](https://github.com/blackm0re/pyotp2289/blob/master/LICENSE) and not under the
 (L)GPL-3 as I usually do.
 
 I hope that somebody will find it useful.
-
 
 ## Installation
 
@@ -27,16 +25,20 @@ I hope that somebody will find it useful.
    pip install pyotp2289
    ```
 
-
 ### FreeBSD
 
 *pyotp2289* is included in the official ports-tree.
 
    ```bash
+   pkg install security/py-pyotp2289
+   ```
+
+– or: 
+
+   ```bash
    cd /usr/ports/security/py-pyotp2289
    make install clean
    ```
-
 
 ### Gentoo
 
@@ -49,7 +51,6 @@ I hope that somebody will find it useful.
 
    emerge dev-python/pyotp2289
    ```
-
 
 ## Overview of RFC-2289
 
