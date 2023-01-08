@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.1](https://github.com/blackm0re/pyotp2289/tree/1.2.1) (2023-01-08)
+
+[Full Changelog](https://github.com/blackm0re/pyotp2289/compare/1.2.0...1.2.1)
+
+**Changes:**
+
+- Include the unit tests in the sdist package
+
+
 ## [1.2.0](https://github.com/blackm0re/pyotp2289/tree/1.2.0) (2023-01-05)
 
 [Full Changelog](https://github.com/blackm0re/pyotp2289/compare/1.1.1...1.2.0)

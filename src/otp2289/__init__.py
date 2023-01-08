@@ -40,7 +40,7 @@ from .server import (
 )
 
 __author__ = 'Simeon Simeonov'
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 __license__ = 'BSD 2-Clause'
 
 
