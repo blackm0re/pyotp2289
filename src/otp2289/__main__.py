@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 #
-# Copyright (c) 2020-2023 Simeon Simeonov
+# Copyright (c) 2020-2025 Simeon Simeonov
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,10 +31,10 @@ python -m otp2289 --initiate-new-sequence -s TesT
 python -m otp2289 --generate-otp-response -c "otp-md5 499 TesT " -f token
 python -m otp2289 --generate-otp-response -s TesT -i 499 -f token
 """
+
 import argparse
 import errno
 import getpass
-import io
 import os
 import secrets
 import string
@@ -56,17 +55,15 @@ def generate_otp_response(args: argparse.Namespace) -> str:
     :param args: The arguments assigned from argparse
     :type args: argparse.Namespace
 
-    :raises otp2289.OTPChallengeException: If the challenge is invalid
+    :raises otp2289.OTPChallengeError: If the challenge is invalid
 
-    :raises otp2289.OTPGeneratorException: If generator parameters are wrong
+    :raises otp2289.OTPGeneratorError: If generator parameters are wrong
 
     :return: The response string
     :rtype: str
     """
     generator = otp2289.generator.OTPGenerator(
-        args.password.encode(),
-        args.seed,
-        args.hash_algo,
+        args.password.encode(), args.seed, args.hash_algo
     )
     if args.challenge_string:
         if args.output_format == 'token':
@@ -95,27 +92,26 @@ def generate_otp_range(args: argparse.Namespace) -> str:
     :param args: The arguments assigned from argparse
     :type args: argparse.Namespace
 
-    :raises otp2289.OTPChallengeException: If the challenge is invalid
+    :raises otp2289.OTPChallengeError: If the challenge is invalid
 
-    :raises otp2289.OTPGeneratorException: If generator parameters are wrong
+    :raises otp2289.OTPGeneratorError: If generator parameters are wrong
 
     :return: The responses string
     :rtype: str
     """
     generator = otp2289.generator.OTPGenerator(
-        args.password.encode(),
-        args.seed,
-        args.hash_algo,
+        args.password.encode(), args.seed, args.hash_algo
     )
     if args.output_format == 'token':
         method = generator.generate_otp_words
     else:
         method = generator.generate_otp_hexdigest
+
     # handle most cases explicitly
     if args.range == 1:
         return f'{args.step}: ' + method(args.step)
-    if args.range > args.step + 1:
-        args.range = args.step + 1
+    args.range = min(args.range, args.step + 1)
+
     # any need for quiet?
     header = ''
     if not args.quiet:
@@ -126,11 +122,7 @@ def generate_otp_range(args: argparse.Namespace) -> str:
     return header + os.linesep.join(
         [
             f'{step}: ' + method(step)
-            for step in range(
-                args.step,
-                args.step - args.range,
-                -1,
-            )
+            for step in range(args.step, args.step - args.range, -1)
         ]
     )
 
@@ -171,7 +163,7 @@ def get_password(args: argparse.Namespace) -> str:
         return password
 
     if os.path.isfile(args.password):
-        with io.open(args.password, 'r', encoding='utf-8') as fp:
+        with open(args.password, encoding='utf-8') as fp:
             return fp.readline().strip()
 
     return args.password
@@ -196,9 +188,9 @@ def initiate_new_sequence(args: argparse.Namespace) -> str:
     :param args: The arguments assigned from argparse
     :type args: argparse.Namespace
 
-    :raises otp2289.OTPChallengeException: If the challenge is invalid
+    :raises otp2289.OTPChallengeError: If the challenge is invalid
 
-    :raises otp2289.OTPGeneratorException: If generator parameters are wrong
+    :raises otp2289.OTPGeneratorError: If generator parameters are wrong
 
     :return: The response string
     :rtype: str
@@ -212,9 +204,7 @@ def initiate_new_sequence(args: argparse.Namespace) -> str:
             f'Hash: {args.hash_algo}{os.linesep}'
         )
     generator = otp2289.generator.OTPGenerator(
-        args.password.encode(),
-        args.seed,
-        args.hash_algo,
+        args.password.encode(), args.seed, args.hash_algo
     )
     if args.challenge_string:
         return header + generator.generate_otp_hexdigest_from_challenge(
@@ -372,9 +362,9 @@ def main(args=None):
         if args.generate_otp_response:
             print(generate_otp_response(args))
         sys.exit(0)
-    except otp2289.generator.OTPGeneratorException as exp:
+    except otp2289.generator.OTPGeneratorError as exp:
         eprint(f'GeneratorException: {exp}')
-    except otp2289.generator.OTPChallengeException as exp:
+    except otp2289.generator.OTPChallengeError as exp:
         eprint(f'ChallengeException: {exp}')
     except Exception as exp:
         eprint(f'Unknown error: {exp}')

@@ -33,7 +33,7 @@ I hope that somebody will find it useful.
    pkg install security/py-pyotp2289
    ```
 
-– or: 
+or: 
 
    ```bash
    cd /usr/ports/security/py-pyotp2289
@@ -45,9 +45,6 @@ I hope that somebody will find it useful.
    ```bash
    # add sgs' custom repository using app-eselect/eselect-repository
    eselect repository add sgs
-
-   # ... or using app-portage/layman (obsolete)
-   layman -a sgs
 
    emerge dev-python/pyotp2289
    ```

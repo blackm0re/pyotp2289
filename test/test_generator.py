@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 #
-# Copyright (c) 2020-2023, Simeon Simeonov
+# Copyright (c) 2020-2025, Simeon Simeonov
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,25 +35,25 @@ def test_caller_exceptions():
         'TeSt',
         otp2289.OTP_ALGO_MD5,
     )
-    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+    with pytest.raises(otp2289.OTPGeneratorError) as exc_info:
         gen.generate_otp_words('3')
-    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.type is otp2289.OTPGeneratorError
     assert exc_info.value.args[0] == 'Step value MUST be an int'
-    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+    with pytest.raises(otp2289.OTPGeneratorError) as exc_info:
         gen.generate_otp_hexdigest(-1)
-    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.type is otp2289.OTPGeneratorError
     assert exc_info.value.args[0] == 'Step value MUST be >= 0'
-    with pytest.raises(otp2289.OTPChallengeException) as exc_info:
+    with pytest.raises(otp2289.OTPChallengeError) as exc_info:
         gen.generate_otp_hexdigest_from_challenge(b'md5 fbd TeSt')
-    assert exc_info.type is otp2289.OTPChallengeException
+    assert exc_info.type is otp2289.OTPChallengeError
     assert exc_info.value.args[0] == 'Challenge must be str'
-    with pytest.raises(otp2289.OTPChallengeException) as exc_info:
+    with pytest.raises(otp2289.OTPChallengeError) as exc_info:
         gen.generate_otp_hexdigest_from_challenge('md5 fbd TeSt')
-    assert exc_info.type is otp2289.OTPChallengeException
+    assert exc_info.type is otp2289.OTPChallengeError
     assert exc_info.value.args[0] == 'Invalid challenge'
-    with pytest.raises(otp2289.generator.OTPChallengeException) as exc_info:
+    with pytest.raises(otp2289.generator.OTPChallengeError) as exc_info:
         gen.generate_otp_hexdigest_from_challenge('otp-md5 fbd TeSt')
-    assert exc_info.type is otp2289.generator.OTPChallengeException
+    assert exc_info.type is otp2289.generator.OTPChallengeError
     assert exc_info.value.args[0] == 'Invalid challenge'
 
 
@@ -63,74 +62,74 @@ def test_constructor_exceptions():
     Tests the exceptions when initializing a new object (in the constructor)
     """
     # test the otp2289.OTPGenerator __init__ and validators
-    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+    with pytest.raises(otp2289.OTPGeneratorError) as exc_info:
         otp2289.OTPGenerator(
             'This is a test.'.encode(),
             'TeStø'.encode(),
             otp2289.OTP_ALGO_MD5,
         )
-    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.type is otp2289.OTPGeneratorError
     assert exc_info.value.args[0] == 'Seed must be a string'
-    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+    with pytest.raises(otp2289.OTPGeneratorError) as exc_info:
         otp2289.OTPGenerator(
             'This is a test.'.encode(),
             'TeStøtEsTteSTteStTest',
             otp2289.OTP_ALGO_SHA1,
         )
-    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.type is otp2289.OTPGeneratorError
     assert exc_info.value.args[0] == (
         'The seed MUST be of 1 to 16 characters in length'
     )
-    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+    with pytest.raises(otp2289.OTPGeneratorError) as exc_info:
         otp2289.OTPGenerator(
             'This is a test.'.encode(),
             'TeStø',
             otp2289.OTP_ALGO_SHA1,
         )
-    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.type is otp2289.OTPGeneratorError
     assert exc_info.value.args[0] == (
         'The seed MUST consist of purely alphanumeric characters'
     )
-    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+    with pytest.raises(otp2289.OTPGeneratorError) as exc_info:
         otp2289.OTPGenerator(
             'This is a test.'.encode(),
             'TeSt',
             9,
         )
-    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.type is otp2289.OTPGeneratorError
     assert exc_info.value.args[0] == (
         'hash_algo is not among the known algorithms'
     )
-    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+    with pytest.raises(otp2289.OTPGeneratorError) as exc_info:
         otp2289.OTPGenerator(
             'This is a test.'.encode(),
             'TeSt',
             b'md5',
         )
-    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.type is otp2289.OTPGeneratorError
     assert exc_info.value.args[0] == 'hash_algo must be an int or a str'
     # test the package structure as well
-    with pytest.raises(otp2289.generator.OTPGeneratorException) as exc_info:
+    with pytest.raises(otp2289.generator.OTPGeneratorError) as exc_info:
         otp2289.generator.OTPGenerator(
             'This is a test.'.encode(),
             'TeSt',
             'foo',
         )
-    assert exc_info.type is otp2289.generator.OTPGeneratorException
+    assert exc_info.type is otp2289.generator.OTPGeneratorError
     assert exc_info.value.args[0] == (
         'foo is not supported by this version of the hashlib module'
     )
-    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+    with pytest.raises(otp2289.OTPGeneratorError) as exc_info:
         otp2289.OTPGenerator('1234567', 'TeSt', otp2289.OTP_ALGO_MD5)
-    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.type is otp2289.OTPGeneratorError
     assert exc_info.value.args[0] == 'Password must be a byte-string'
-    with pytest.raises(otp2289.OTPGeneratorException) as exc_info:
+    with pytest.raises(otp2289.OTPGeneratorError) as exc_info:
         otp2289.OTPGenerator(
             '1234567'.encode(),
             'TeSt',
             otp2289.OTP_ALGO_MD5,
         )
-    assert exc_info.type is otp2289.OTPGeneratorException
+    assert exc_info.type is otp2289.OTPGeneratorError
     assert exc_info.value.args[0] == 'Password must be longer than 10 bytes'
 
 

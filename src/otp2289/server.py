@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 #
-# Copyright (c) 2020-2023 Simeon Simeonov
+# Copyright (c) 2020-2025 Simeon Simeonov
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,22 +23,23 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """A pure Python implementation of the RFC-2289 OTP server"""
+
 import binascii
 import hashlib
 
-from .generator import OTP_ALGO_MD5, OTPGenerator, OTPGeneratorException
+from .generator import OTP_ALGO_MD5, OTPGenerator, OTPGeneratorError
 
 
-class OTPStateException(Exception):
-    """OTPStateException class"""
+class OTPStateError(Exception):
+    """OTPStateError class"""
 
 
-class OTPStoreException(Exception):
-    """OTPStoreException class"""
+class OTPStoreError(Exception):
+    """OTPStoreError class"""
 
 
-class OTPInvalidResponse(Exception):
-    """OTPInvalidResponse class"""
+class OTPInvalidResponseError(Exception):
+    """OTPInvalidResponseError class"""
 
 
 class OTPState:
@@ -52,11 +52,7 @@ class OTPState:
     """
 
     def __init__(
-        self,
-        ot_hex: str,
-        current_step: int,
-        seed: str,
-        hash_algo=OTP_ALGO_MD5,
+        self, ot_hex: str, current_step: int, seed: str, hash_algo=OTP_ALGO_MD5
     ):
         """
         Constructs an OTPState object with the given arguments.
@@ -75,15 +71,15 @@ class OTPState:
         :param hash_algo: The hash algo, defaults to OTP_ALGO_MD5
         :type hash_algo: int or str
 
-        :raises otp2289.OTPStateException: If the input does not validate
+        :raises otp2289.OTPStateError: If the input does not validate
         """
         # enforce the rfc2289 constraints
         try:
             self._seed = OTPGenerator.validate_seed(seed)
             self._hash_algo = OTPGenerator.validate_hash_algo(hash_algo)
             self._step = OTPGenerator.validate_step(current_step)
-        except OTPGeneratorException as exp:
-            raise OTPStateException(exp.args[0]) from None
+        except OTPGeneratorError as exp:
+            raise OTPStateError(exp.args[0]) from None
         self._current_digest = None
         if ot_hex is not None:
             self._current_digest = self.validate_hex(ot_hex)
@@ -157,28 +153,28 @@ class OTPState:
 
         The method first checks if response is a token and tries to convert
         it to bytes. If that fails, the method assumes that response is a hex.
-        If neither of those attempts succeeds OTPInvalidResponse is raised.
+        If neither of those attempts succeeds OTPInvalidResponseError is raised
         It is up to the caller to run another iteration and compare the result
         to an existing digest in this state.
 
         :param response: The response to this state (its challenge)
         :type response: str
 
-        :raises otp2289.OTPInvalidResponse: If the response is corrupt/illegal,
-                                            but not if it simply does not
-                                            validate
+        :raises otp2289.OTPInvalidResponseError: If the response is
+                                                 corrupt/illegal, but not if it
+                                                 simply does not validate
 
         :return: The bytes representation of response (if any)
         :rtype: bytes
         """
         try:
             return OTPGenerator.tokens_to_bytes(response)
-        except OTPGeneratorException:
+        except OTPGeneratorError:
             # now assume hex...
             try:
                 return OTPState.validate_hex(response)
-            except OTPStateException:
-                raise OTPInvalidResponse(
+            except OTPStateError:
+                raise OTPInvalidResponseError(
                     'The response is neither a valid token or hex'
                 ) from None
 
@@ -190,25 +186,25 @@ class OTPState:
         :param ot_hex: The one-time hex to validate
         :type ot_hex: str
 
-        :raises otp2289.OTPStateException: If hex does not validate
+        :raises otp2289.OTPStateError: If hex does not validate
 
         :return: The validated hex (without leading 0x) converted to bytes
         :rtype: bytes
         """
         if not isinstance(ot_hex, str):
-            raise OTPStateException('OT-hex must be a str')
+            raise OTPStateError('OT-hex must be a str')
         if ot_hex.startswith('0x'):
             ot_hex = ot_hex[2:]
             ot_hex = ot_hex.strip().lower()
         if len(ot_hex) != 16:
-            raise OTPStateException(
+            raise OTPStateError(
                 'The length of the hex should be 16 '
                 '(representing 64 bits digest)'
             )
         try:
             return binascii.unhexlify(ot_hex)
         except binascii.Error:
-            raise OTPStateException('Invalid OT-hex') from None
+            raise OTPStateError('Invalid OT-hex') from None
 
     def get_next_state(self):
         """
@@ -223,16 +219,11 @@ class OTPState:
         if self._new_digest_hex is None:
             return None
         return OTPState(
-            self._new_digest_hex,
-            self._step - 1,
-            self._seed,
-            self._hash_algo,
+            self._new_digest_hex, self._step - 1, self._seed, self._hash_algo
         )
 
     def response_validates(
-        self,
-        response: str,
-        store_valid_response: str = True,
+        self, response: str, store_valid_response: str = True
     ) -> bool:
         """
         Validates the incoming response as specified by RFC-2289.
@@ -243,14 +234,14 @@ class OTPState:
         :param store_valid_response: Should a valid response be stored
         :type store_valid_response: bool
 
-        :raises otp2289.OTPInvalidResponse: If the response does not match
+        :raises otp2289.OTPInvalidResponseError: If the response does not match
                                             this state
 
         :return: Returns True if response validates, False otherwise
         :rtype: bool
         """
-        # self.response_to_bytes raises OTPInvalidResponse in case response
-        # is corrupt or in a wrong format
+        # self.response_to_bytes raises OTPInvalidResponseError in case
+        # response is corrupt or in a wrong format
         response_bytes = self.response_to_bytes(response)
         if self._hash_algo == 'md5':
             digest = hashlib.md5(response_bytes).digest()
@@ -281,7 +272,7 @@ class OTPState:
                 return True
             return False
         # this should not happen since the hash_algo is validated by the caller
-        raise OTPInvalidResponse(f'Ivalid hash_algo: {self._hash_algo}')
+        raise OTPInvalidResponseError(f'Ivalid hash_algo: {self._hash_algo}')
 
     def to_dict(self) -> dict:
         """
@@ -367,12 +358,12 @@ class OTPStore:
         :param state: The OTPState object
         :type state: otp2289.OTPState
 
-        :raises otp2289.OTPStoreException: On failure
+        :raises otp2289.OTPStoreError: On failure
         """
         if not isinstance(key, str):
-            raise OTPStoreException('key must be a str')
+            raise OTPStoreError('key must be a str')
         if not isinstance(state, OTPState):
-            raise OTPStoreException('state must be an OTPState-object')
+            raise OTPStoreError('state must be an OTPState-object')
         self._data[key] = state
         self._states[state] = key
 
@@ -393,22 +384,19 @@ class OTPStore:
 
         :raises KeyError: If key does not exist
 
-        :raises otp2289.OTPStoreException: On failure
+        :raises otp2289.OTPStoreError: On failure
 
         :return: The state corresponding to the key
         :rtype: otp2289.OTPState
         """
         if not isinstance(key, str):
-            raise OTPStoreException('key must be a str')
+            raise OTPStoreError('key must be a str')
         state = self._data.pop(key)
         self._states.pop(state)
         return state
 
     def response_validates(
-        self,
-        key: str,
-        response: str,
-        store_valid_response: bool = True,
+        self, key: str, response: str, store_valid_response: bool = True
     ) -> bool:
         """
         A method that wraps around OTPState.response_validates and
@@ -429,8 +417,8 @@ class OTPStore:
 
         :raises KeyError: If the key is not present
 
-        :raises otp2289.OTPInvalidResponse: If the response does not match
-                                            this state
+        :raises otp2289.OTPInvalidResponseError: If the response does not match
+                                                 this state
 
         :return: Returns True if response validates, False otherwise
         :rtype: bool

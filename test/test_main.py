@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 #
-# Copyright (c) 2020-2023, Simeon Simeonov
+# Copyright (c) 2020-2025, Simeon Simeonov
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without

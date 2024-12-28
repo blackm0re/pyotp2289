@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 #
-# Copyright (c) 2020-2023, Simeon Simeonov
+# Copyright (c) 2020-2025, Simeon Simeonov
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -39,9 +38,9 @@ def test_state_caller_exceptions():
         'TeSt',
         otp2289.OTP_ALGO_MD5,
     )
-    with pytest.raises(otp2289.OTPInvalidResponse) as exc_info:
+    with pytest.raises(otp2289.OTPInvalidResponseError) as exc_info:
         state.response_validates('bla')
-    assert exc_info.type is otp2289.OTPInvalidResponse
+    assert exc_info.type is otp2289.OTPInvalidResponseError
     assert exc_info.value.args[0] == (
         'The response is neither a valid token or hex'
     )
@@ -49,23 +48,23 @@ def test_state_caller_exceptions():
 
 def test_state_constructor_exceptions():
     """Tests the exceptions when initializing new OTPState objects"""
-    with pytest.raises(otp2289.OTPStateException) as exc_info:
+    with pytest.raises(otp2289.OTPStateError) as exc_info:
         otp2289.OTPState(
             '0x7965e05436f5029t',
             1,
             'TeStø'.encode(),
             otp2289.OTP_ALGO_MD5,
         )
-    assert exc_info.type is otp2289.OTPStateException
+    assert exc_info.type is otp2289.OTPStateError
     assert exc_info.value.args[0] == 'Seed must be a string'
-    with pytest.raises(otp2289.OTPStateException) as exc_info:
+    with pytest.raises(otp2289.OTPStateError) as exc_info:
         otp2289.OTPState(
             '0x7965e05436f5029t',
             '1',
             'TeSt',
             otp2289.OTP_ALGO_MD5,
         )
-    assert exc_info.type is otp2289.OTPStateException
+    assert exc_info.type is otp2289.OTPStateError
     assert exc_info.value.args[0] == 'Step value MUST be an int'
 
 

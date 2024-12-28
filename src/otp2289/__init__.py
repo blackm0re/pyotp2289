@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 #
-# Copyright (c) 2020-2023 Simeon Simeonov
+# Copyright (c) 2020-2025 Simeon Simeonov
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,23 +23,24 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """A pure Python implementation of RFC-2289"""
+
 from .generator import (
     OTP_ALGO_MD5,
     OTP_ALGO_SHA1,
-    OTPChallengeException,
+    OTPChallengeError,
     OTPGenerator,
-    OTPGeneratorException,
+    OTPGeneratorError,
 )
 from .server import (
-    OTPInvalidResponse,
+    OTPInvalidResponseError,
     OTPState,
-    OTPStateException,
+    OTPStateError,
     OTPStore,
-    OTPStoreException,
+    OTPStoreError,
 )
 
 __author__ = 'Simeon Simeonov'
-__version__ = '1.2.1'
+__version__ = '1.2.2'
 __license__ = 'BSD 2-Clause'
 
 
@@ -57,12 +57,12 @@ VERSION = tuple(map(int_or_str, __version__.split('.')))
 __all__ = [
     'OTP_ALGO_MD5',
     'OTP_ALGO_SHA1',
-    'OTPChallengeException',
+    'OTPChallengeError',
     'OTPGenerator',
-    'OTPGeneratorException',
-    'OTPInvalidResponse',
+    'OTPGeneratorError',
+    'OTPInvalidResponseError',
     'OTPState',
-    'OTPStateException',
+    'OTPStateError',
     'OTPStore',
-    'OTPStoreException',
+    'OTPStoreError',
 ]
